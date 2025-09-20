@@ -2,8 +2,16 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace LevelManagement
+namespace Blocks.Data
 {
+    public enum IconTier : sbyte
+    {
+        Default = 0,
+        A = 1,
+        B = 2,
+        C = 3,
+    }
+
     [Serializable]
     public struct SkinSet
     {
@@ -24,12 +32,12 @@ namespace LevelManagement
             };
         }
     }
-    
+
     [CreateAssetMenu(fileName = "SkinSetCollection", menuName = "Levels/Skin Set Collection")]
     public sealed class SkinSetCollection : ScriptableObject
     {
         public List<SkinSet> Skins = new();
-        
+
         private Dictionary<string, SkinSet> m_ById;
 
         private void OnEnable()
@@ -47,8 +55,9 @@ namespace LevelManagement
 
         public SkinSet GetSkinSet(int index)
         {
-            if(index < 0 || index >= Skins.Count) throw new IndexOutOfRangeException("Group Id for SkinSet is out of range.");
-            
+            if (index < 0 || index >= Skins.Count)
+                throw new IndexOutOfRangeException("Group Id for SkinSet is out of range.");
+
             return Skins[index];
         }
 
@@ -66,8 +75,8 @@ namespace LevelManagement
 
         public Sprite Get(int index, IconTier tier)
         {
-            if(index < 0 || index >= Skins.Count) return null;
-            
+            if (index < 0 || index >= Skins.Count) return null;
+
             var entry = Skins[index];
             return tier switch
             {

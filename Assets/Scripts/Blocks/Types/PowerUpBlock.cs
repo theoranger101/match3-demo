@@ -24,6 +24,7 @@ namespace Blocks.Types
         public override void Pop()
         {
             Debug.Log($"Activated PowerUpBlock {Type} at position {GridPosition}");
+            
             base.Pop();
         }
 

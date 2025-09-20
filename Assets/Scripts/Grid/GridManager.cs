@@ -74,7 +74,7 @@ namespace Grid
         {
             UnsubscribeEvents();
         }
-
+        
         private void SubscribeEvents()
         {
             GEM.Subscribe<LevelEvent>(HandleInitGrid, channel: (int)LevelEventType.InitGrid);
@@ -457,20 +457,6 @@ namespace Grid
             {
                 return;
             }
-
-            /*
-            // check for duplicate entries before taking action
-            for (var i = 0; i < m_EmptiedCells.Count - 1; i++)
-            {
-                for (var j = m_EmptiedCells.Count - 1; j > i; j--)
-                {
-                    if (m_EmptiedCells[i] == m_EmptiedCells[j])
-                    {
-
-                    }
-                }
-            }
-            */
 
             using (var refillEvt = GridEvent.Get(m_EmptiedCells))
             {

@@ -37,7 +37,6 @@ namespace LevelManagement.Data
 
         [Header("Spawning/Randomness")] 
         public int Seed = 1234;
-        // public MatchBlockType[] Palette = new []{ MatchBlockType.Blue, MatchBlockType.Green, MatchBlockType.Red, MatchBlockType.Yellow };
 
         [Header("Rules")]
         public bool RemapColorsOnRetry = true; // keep shape, shuffle colors

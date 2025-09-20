@@ -36,14 +36,6 @@ namespace Blocks.UI
         public BlockView SpawnView(Block block, Transform parent)
         {
             var skinSet = m_Theme.GetBlockEntry(block.GetCategory(), block.GetTypeId());
-
-            /*
-            if (skinSet == null)
-            {
-                Debug.LogError($"No BlockSkin available for block with category {block.GetCategory()} and type {block.GetType()} with typeId {block.GetTypeId()}!");
-                return null;
-            }
-            */
             
             var pool = GetOrCreatePool(m_DefaultPrefab, parent);
             var view = pool.Get(parent);

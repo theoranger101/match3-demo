@@ -37,14 +37,14 @@ namespace Grid.MatchDetectionStrategies
 
                 Debug.Log("Visiting block at position: " + block.GridPosition + " of type: " + match.MatchGroupId + "");
 
-                // Check adjacent blocks (up, down, left, right)
+                // check adjacent blocks (up, down, left, right)
                 var x = block.GridPosition.x;
                 var y = block.GridPosition.y;
 
-                if (x > 0) DepthFirstSearch(grid[x - 1, y]); // Left
-                if (x < grid.GetLength(0) - 1) DepthFirstSearch(grid[x + 1, y]); // Right
-                if (y > 0) DepthFirstSearch(grid[x, y - 1]); // Down
-                if (y < grid.GetLength(1) - 1) DepthFirstSearch(grid[x, y + 1]); // Up
+                if (x > 0) DepthFirstSearch(grid[x - 1, y]); // left
+                if (x < grid.GetLength(0) - 1) DepthFirstSearch(grid[x + 1, y]); // right
+                if (y > 0) DepthFirstSearch(grid[x, y - 1]); // down
+                if (y < grid.GetLength(1) - 1) DepthFirstSearch(grid[x, y + 1]); // up
             }
         }
     }

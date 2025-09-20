@@ -85,7 +85,7 @@ namespace Grid
                         moveEvent.SendGlobal(channel: (int)GridEventType.BlockMoved);
                     }
 
-                    OnBlockMoved?.Invoke(block);
+                    // OnBlockMoved?.Invoke(block);
                 }
                 else
                 {

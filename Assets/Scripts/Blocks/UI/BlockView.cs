@@ -1,15 +1,16 @@
-using System;
+using Blocks.Data;
 using LevelManagement;
 using UnityEngine;
 using Utilities.Events;
 
 namespace Blocks.UI
 {
+    [RequireComponent(typeof(SpriteRenderer))]
     public class BlockView : MonoBehaviour
     {
         public SpriteRenderer SpriteRenderer;
         public Block Block { get; private set; }
-        
+
         private SkinSet m_SkinSet;
 
         public virtual void Init(Block block, SkinSet skinSet)
@@ -18,7 +19,7 @@ namespace Blocks.UI
 
             Block = block;
             m_SkinSet = skinSet;
-            
+
             UpdateIcon(m_SkinSet.IconDefault);
             UpdateSortingOrder();
 
@@ -28,6 +29,11 @@ namespace Blocks.UI
         public virtual void UpdateIcon(Sprite sprite)
         {
             SpriteRenderer.sprite = sprite;
+        }
+
+        public void UpdateSortingOrder()
+        {
+            SpriteRenderer.sortingOrder = Block.GridPosition.y;
         }
 
         protected virtual void SubscribeEvents()
@@ -40,6 +46,11 @@ namespace Blocks.UI
         {
             GEM.Unsubscribe<BlockEvent>(HandleBlockPopped, (int)BlockEventType.BlockPopped);
             Block.RemoveListener<BlockEvent>(HandleTierUpdated, (int)BlockEventType.TierUpdated);
+        }
+
+        private void OnMouseDown()
+        {
+            OnClick();
         }
 
         private void HandleTierUpdated(BlockEvent blockEvent)
@@ -57,16 +68,6 @@ namespace Blocks.UI
             OnPopped();
         }
 
-        private void OnPopped()
-        {
-            PlayPopSequence();
-            OnRelease();
-        }
-
-        protected virtual void PlayPopSequence()
-        {
-        }
-
         private void OnClick()
         {
             if (Block != null)
@@ -82,9 +83,14 @@ namespace Blocks.UI
             }
         }
 
-        public void UpdateSortingOrder()
+        private void OnPopped()
         {
-            SpriteRenderer.sortingOrder = Block.GridPosition.y;
+            PlayPopSequence();
+            OnRelease();
+        }
+
+        protected virtual void PlayPopSequence()
+        {
         }
 
         private void OnRelease()
@@ -95,11 +101,6 @@ namespace Blocks.UI
             Block = null;
             SpriteRenderer.sprite = null;
             transform.localScale = Vector3.one;
-        }
-
-        private void OnMouseDown()
-        {
-            OnClick();
         }
     }
 }
