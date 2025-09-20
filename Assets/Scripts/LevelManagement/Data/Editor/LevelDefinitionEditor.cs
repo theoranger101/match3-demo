@@ -46,7 +46,8 @@ namespace LevelManagement.Editor
 
         private LevelDefinition m_Level;
         private SerializedProperty m_GridSizeProp, m_CellsProp;
-        private SerializedProperty m_LevelRules, m_GameTheme;
+        private SerializedProperty m_LevelRulesProp, m_GameThemeProp;
+        private SerializedProperty m_MoveCountProp;
 
         private Brush m_BrushState = Brush.None;
 
@@ -65,8 +66,10 @@ namespace LevelManagement.Editor
             m_GridSizeProp = serializedObject.FindProperty("GridSize");
             m_CellsProp = serializedObject.FindProperty("Cells");
             
-            m_LevelRules = serializedObject.FindProperty("LevelRules");
-            m_GameTheme = serializedObject.FindProperty("GameTheme");
+            m_LevelRulesProp = serializedObject.FindProperty("LevelRules");
+            m_GameThemeProp = serializedObject.FindProperty("GameTheme");
+            
+            m_MoveCountProp = serializedObject.FindProperty("MoveCount");
         }
 
         public override void OnInspectorGUI()
@@ -78,8 +81,8 @@ namespace LevelManagement.Editor
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.PropertyField(m_GridSizeProp);
             EditorGUILayout.EndHorizontal();
-            EditorGUILayout.PropertyField(m_LevelRules);
-            EditorGUILayout.PropertyField(m_GameTheme);
+            EditorGUILayout.PropertyField(m_LevelRulesProp);
+            EditorGUILayout.PropertyField(m_GameThemeProp);
 
             EditorGUILayout.Space(4);
 
@@ -134,6 +137,8 @@ namespace LevelManagement.Editor
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.Space(6);
+            
+            EditorGUILayout.PropertyField(m_MoveCountProp);
             
             serializedObject.ApplyModifiedProperties();
         }

@@ -1,9 +1,5 @@
-using System;
 using System.Collections.Generic;
 using Blocks;
-using Blocks.UI;
-using Grid.EventImplementations;
-using LevelManagement;
 using UnityEngine;
 using Utilities.Events;
 using Utilities.Pooling;
@@ -11,16 +7,19 @@ using Random = UnityEngine.Random;
 
 namespace Grid
 {
+    // TODO: does it need to be monobehaviour?
     public class GridRefillController : MonoBehaviour
     {
-        // TODO: block movement to be animated and controlled by other entity
-        public static event Action<Block> OnBlockMoved;
-
-        private void Awake()
+        private void OnEnable()
         {
             GEM.Subscribe<GridEvent>(HandleRefillRequest, channel: (int)GridEventType.TriggerRefill);
         }
-        
+
+        private void OnDisable()
+        {
+            GEM.Unsubscribe<GridEvent>(HandleRefillRequest, channel: (int)GridEventType.TriggerRefill);
+        }
+
         private void HandleRefillRequest(GridEvent evt)
         {
             if (evt.GridPositions == null || evt.GridPositions.Count == 0)
@@ -84,8 +83,6 @@ namespace Grid
                     {
                         moveEvent.SendGlobal(channel: (int)GridEventType.BlockMoved);
                     }
-
-                    // OnBlockMoved?.Invoke(block);
                 }
                 else
                 {

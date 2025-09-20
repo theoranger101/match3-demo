@@ -3,7 +3,7 @@ using Blocks;
 using UnityEngine;
 using Utilities.Events;
 
-namespace Grid.EventImplementations
+namespace Grid
 {
     public enum GridEventType
     {

@@ -2,14 +2,13 @@ using System;
 using System.Collections.Generic;
 using Blocks;
 using Blocks.Types;
-using Blocks.UI;
 using Grid.ClickStrategies;
-using Grid.EventImplementations;
 using Grid.MatchDetectionStrategies;
 using Grid.Utilities;
 using LevelManagement;
-using LevelManagement.EventImplementations;
 using UnityEngine;
+using Utilities;
+using Utilities.DI;
 using Utilities.Events;
 using Utilities.Pooling;
 
@@ -57,27 +56,25 @@ namespace Grid
         // private static readonly ObstacleBlockClickStrategy s_ObstacleClick = new();
 
         #endregion
+        
+        [Inject] private Action<Block[,]> m_RecomputeExistingMatches;
 
-        // TODO: consider a different approach for global settings
-        // private GlobalSettings m_Settings;
+        private bool m_IsResetting;
 
-        // Utility
-        private static readonly Vector2Int[] kFour = { new(-1, 0), new(1, 0), new(0, -1), new(0, 1) };
-
-        private void Awake()
+        private void OnEnable()
         {
-            // m_Settings = GlobalSettings.Get();
             SubscribeEvents();
         }
 
-        private void OnDestroy()
+        private void OnDisable()
         {
             UnsubscribeEvents();
         }
-        
+
         private void SubscribeEvents()
         {
             GEM.Subscribe<LevelEvent>(HandleInitGrid, channel: (int)LevelEventType.InitGrid);
+            GEM.Subscribe<LevelEvent>(HandleResetGrid, channel: (int)LevelEventType.ResetGrid);
 
             GEM.Subscribe<GridEvent>(HandleGetAxis, channel: (int)GridEventType.RequestAxis);
             GEM.Subscribe<GridEvent>(HandleGetAdjacent, channel: (int)GridEventType.RequestAdjacent);
@@ -94,6 +91,7 @@ namespace Grid
         private void UnsubscribeEvents()
         {
             GEM.Unsubscribe<LevelEvent>(HandleInitGrid, channel: (int)LevelEventType.InitGrid);
+            GEM.Unsubscribe<LevelEvent>(HandleResetGrid, channel: (int)LevelEventType.ResetGrid);
 
             GEM.Unsubscribe<GridEvent>(HandleGetAxis, channel: (int)GridEventType.RequestAxis);
             GEM.Unsubscribe<GridEvent>(HandleGetAdjacent, channel: (int)GridEventType.RequestAdjacent);
@@ -113,11 +111,22 @@ namespace Grid
         {
             InitGrid(evt.GridSize, evt.LevelData);
         }
+        
+        private void HandleResetGrid(LevelEvent evt)
+        {
+            ResetGrid();
+        }
 
         private void HandleBlockPopped(BlockEvent evt)
         {
             var pos = evt.Block.GridPosition;
 
+            if (m_IsResetting)
+            {
+                RemoveBlock(pos);
+                return;
+            }
+            
             m_EmptiedCells.Add(pos);
 
             RemoveBlock(pos);
@@ -177,11 +186,35 @@ namespace Grid
                 AddBlock(block, position);
             }
             
-            MatchIconTierService.Recompute(m_Grid, LevelController.GetLevelDefinition().LevelRules);
+            m_RecomputeExistingMatches?.Invoke(m_Grid);
         }
 
         public void ResetGrid()
         {
+            if (m_Grid == null) return;
+
+            m_IsResetting = true;
+
+            var w = m_Grid.GetLength(0);
+            var h = m_Grid.GetLength(1);
+
+            for (var y = 0; y < h; y++)
+            {
+                for (var x = 0; x < w; x++)
+                {
+                    var block = m_Grid[x, y];
+                    if (block == null) continue;
+
+                    using (var popped = BlockEvent.Get(block))
+                    {
+                        popped.SendGlobal((int)BlockEventType.BlockPopped);
+                    }
+                }
+            }
+
+            m_EmptiedCells.Clear();
+            m_BatchDepth = 0;
+            m_IsResetting = false;
         }
 
         private void OnBlockClicked(Block block)
@@ -315,9 +348,9 @@ namespace Grid
             var gridWidth = m_Grid.GetLength(0);
             var gridHeight = m_Grid.GetLength(1);
 
-            for (var i = 0; i < kFour.Length; i++)
+            for (var i = 0; i < UtilityExtensions.kFour.Length; i++)
             {
-                var index = gridPosition + kFour[i];
+                var index = gridPosition + UtilityExtensions.kFour[i];
                 if (index.x < 0 || index.x >= gridWidth || index.y < 0 || index.y >= gridHeight)
                 {
                     continue;
@@ -463,7 +496,8 @@ namespace Grid
                 refillEvt.SendGlobal((int)GridEventType.TriggerRefill);
             }
             
-            MatchIconTierService.Recompute(m_Grid, LevelController.GetLevelDefinition().LevelRules);
+            // MatchIconTierService.Recompute(m_Grid, LevelController.GetLevelDefinition().LevelRules);
+            m_RecomputeExistingMatches?.Invoke(m_Grid);
         }
 
         #endregion

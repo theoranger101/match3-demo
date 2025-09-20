@@ -1,6 +1,8 @@
+using System.Collections;
 using System.Collections.Generic;
 using LevelManagement.Data;
 using UnityEngine;
+using Utilities.Events;
 
 namespace LevelManagement
 {
@@ -14,8 +16,10 @@ namespace LevelManagement
 
         public Camera MainCamera;
         
-        private void Start()
+        private IEnumerator Start()
         {
+            yield return null;
+            
             StartLevel(0);
         }
 
@@ -29,9 +33,23 @@ namespace LevelManagement
                 return;
             }
             
-            LevelController.StartLevel(LevelDefinitions[lvl]);
-            var cols = LevelDefinitions[lvl].LevelRules.Columns;
-            var rows = LevelDefinitions[lvl].LevelRules.Rows;
+            CurrentLevel = lvl;
+            LevelController.SetActiveLevel(LevelDefinitions[lvl]);
+            
+            using (var startEvt = LevelEvent.Get())
+            {
+                startEvt.SendGlobal((int)LevelEventType.StartLevel);
+            }
+            
+            LevelController.StartLevel();
+            SetUpCamera();
+        }
+
+        private void SetUpCamera()
+        {
+            var cols = LevelDefinitions[CurrentLevel].LevelRules.Columns;
+            var rows = LevelDefinitions[CurrentLevel].LevelRules.Rows;
+            
             CameraFitter.Fit(MainCamera, cols, rows, 1f, 0.5f);
             var center = new Vector3((cols - 1) * 0.5f, (rows - 1) * 0.5f, -10f);
             MainCamera.transform.position = center;

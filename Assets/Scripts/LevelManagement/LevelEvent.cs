@@ -3,17 +3,26 @@ using Blocks;
 using UnityEngine;
 using Utilities.Events;
 
-namespace LevelManagement.EventImplementations
+namespace LevelManagement
 {
     public enum LevelEventType
     {
-        InitGrid = 0,
+        StartLevel = 0,
+        InitGrid = 1,
+        ResetGrid = 2,
+        RetryLevel = 3,
     }
     
     public class LevelEvent : Event<LevelEvent>
     {
         public Vector2Int GridSize;
         public List<BlockSpawnData> LevelData;
+        
+        public static LevelEvent Get() 
+        {
+            var evt = GetPooledInternal();
+            return evt;
+        }
         
         public static LevelEvent Get(Vector2Int gridSize, List<BlockSpawnData> levelData)
         {

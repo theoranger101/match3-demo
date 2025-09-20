@@ -1,5 +1,6 @@
+using System.Collections;
+using Blocks;
 using LevelManagement.Data;
-using LevelManagement.EventImplementations;
 using UnityEngine;
 using Utilities.Events;
 
@@ -7,13 +8,18 @@ namespace LevelManagement
 {
     public class LevelController : MonoBehaviour
     {
-        private static LevelDefinition m_ActiveLevel;
+        private LevelDefinition m_ActiveLevel;
         private int m_AttemptIndex = 0;
 
-        public void StartLevel(LevelDefinition lvlDef)
+        [SerializeField] private int m_CurrentMoveCount;
+        
+        public void SetActiveLevel(LevelDefinition lvlDef)
         {
             m_ActiveLevel = lvlDef;
-            
+        }
+
+        public void StartLevel()
+        {
             var data = LevelLoader.BuildSpawnData(m_ActiveLevel, 
                 runSeed: m_ActiveLevel.RemapColorsOnRetry ? m_ActiveLevel.Seed + m_AttemptIndex : m_ActiveLevel.Seed);
             
@@ -21,16 +27,44 @@ namespace LevelManagement
             {
                 initEvt.SendGlobal((int)LevelEventType.InitGrid);
             }
+            
+            m_CurrentMoveCount = m_ActiveLevel.MoveCount;
+            
+            GEM.Subscribe<BlockEvent>(HandleBlockClick, channel:(int) BlockEventType.BlockClicked);
         }
 
-        public static LevelDefinition GetLevelDefinition()
+        private void HandleBlockClick(BlockEvent evt)
         {
-            return m_ActiveLevel;
+            m_CurrentMoveCount--;
+
+            if (m_CurrentMoveCount <= 0)
+            {
+                StartCoroutine(RetryLevel());
+            }
         }
         
-        public void RetryLevel()
+        private IEnumerator RetryLevel()
         {
+            GEM.Unsubscribe<BlockEvent>(HandleBlockClick, channel:(int) BlockEventType.BlockClicked);
+
+            ResetLevel();
             
+            yield return new WaitForSeconds(1f);
+            
+            m_AttemptIndex++;
+            StartLevel();
         }
+
+        private void ResetLevel()
+        {
+            using (var resetEvt = LevelEvent.Get())
+            {
+                resetEvt.SendGlobal((int)LevelEventType.ResetGrid);
+            }
+        }
+
+        public LevelDefinition ActiveLevel => m_ActiveLevel;
+        public GameTheme ActiveTheme => m_ActiveLevel.GameTheme;
+        public LevelRules ActiveRules => m_ActiveLevel.LevelRules;
     }
 }

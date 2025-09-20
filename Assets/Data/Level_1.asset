@@ -335,6 +335,7 @@ MonoBehaviour:
     PowerUpType: 0
     ObstacleType: 0
   Seed: 1234
+  RemapColorsOnRetry: 1
   LevelRules: {fileID: 11400000, guid: 2e03a6065459a43449ae373af200bdd6, type: 2}
   GameTheme: {fileID: 11400000, guid: 8e955253ab4c742edb326d8a5b2716a3, type: 2}
-  MoveCount: 0
+  MoveCount: 5

@@ -2,9 +2,8 @@ using System.Collections.Generic;
 using Blocks;
 using Blocks.UI;
 using DG.Tweening;
-using Grid.EventImplementations;
-using LevelManagement.Data;
 using UnityEngine;
+using Utilities.DI;
 using Utilities.Events;
 
 namespace Grid.UI
@@ -15,11 +14,7 @@ namespace Grid.UI
 
         private Dictionary<Block, BlockView> m_ActiveBlockViews = new();
 
-        [SerializeField] private LevelDefinition m_LevelDefinition;
-        [SerializeField] private GameTheme m_BlockSkinLibrary; // TODO: INJECT
-        [SerializeField] private BlockView m_DefaultBlockPrefab; // TODO: INJECT
-
-        private BlockViewFactory m_BlockViewFactory;
+        [Inject] private BlockViewFactory m_BlockViewFactory;
 
         private Sequence m_BlockMovementSequence;
 
@@ -27,14 +22,7 @@ namespace Grid.UI
 
         public Vector2 CellSize; // world units
         public Vector2 Origin = Vector2.zero;
-
-        private void Awake()
-        {
-            m_BlockViewFactory = new BlockViewFactory(m_BlockSkinLibrary, m_DefaultBlockPrefab);
-
-
-        }
-
+        
         private void OnEnable()
         {
             SubscribeEvents();

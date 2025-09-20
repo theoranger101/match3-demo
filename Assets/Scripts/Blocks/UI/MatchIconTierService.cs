@@ -3,16 +3,12 @@ using UnityEngine;
 using Utilities.Pooling;
 using Blocks.Types;
 using LevelManagement;
+using Utilities;
 
 namespace Blocks.UI
 {
     public static class MatchIconTierService
     {
-        private static readonly Vector2Int[] kFour =
-        {
-            new(-1, 0), new(1, 0), new(0, -1), new(0, 1)
-        };
-
         public static void Recompute(Block[,] grid, LevelRules rules)
         {
             var w = grid.GetLength(0);
@@ -49,10 +45,10 @@ namespace Blocks.UI
 
                         members.Add(mb);
 
-                        for (var i = 0; i < kFour.Length; i++)
+                        for (var i = 0; i < UtilityExtensions.kFour.Length; i++)
                         {
-                            var nx = p.x + kFour[i].x;
-                            var ny = p.y + kFour[i].y;
+                            var nx = p.x + UtilityExtensions.kFour[i].x;
+                            var ny = p.y + UtilityExtensions.kFour[i].y;
 
                             if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
                             if (visited[nx, ny]) continue;

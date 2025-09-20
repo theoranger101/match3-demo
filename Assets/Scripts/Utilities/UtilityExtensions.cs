@@ -1,5 +1,6 @@
-using System;
 using System.Collections.Generic;
+using UnityEngine;
+using Random = System.Random;
 
 namespace Utilities
 {
@@ -16,5 +17,10 @@ namespace Utilities
                 (list[j], list[i]) = (list[i], list[j]);
             }
         }
+        
+        public static readonly Vector2Int[] kFour =
+        {
+            new(-1, 0), new(1, 0), new(0, -1), new(0, 1)
+        };
     }
 }
