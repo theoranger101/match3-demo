@@ -25,7 +25,7 @@ namespace Blocks.Types
                     break;
                 case ObstacleType.WoodenBox:
                     IsAffectedByGravity = false;
-                    Strength = 3;
+                    Strength = 2;
                     break;
             }
         }
@@ -52,6 +52,7 @@ namespace Blocks.Types
                 return false;
             }
 
+            this.UpdateAppearance(Strength);
             Strength -= amount;
 
             if (Strength <= 0)

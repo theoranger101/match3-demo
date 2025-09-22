@@ -8,16 +8,16 @@ namespace Blocks.UI
 {
     public class BlockViewFactory
     {
-        private readonly GameTheme m_Theme;
+        private readonly SkinLibrary m_SkinLibrary;
 
         private readonly Dictionary<BlockView, GameObjectPool<BlockView>> m_Pools = new();
         private readonly Dictionary<BlockView, GameObjectPool<BlockView>> m_InstanceToPool = new();
 
         private BlockView m_DefaultPrefab; 
         
-        public BlockViewFactory(GameTheme skinLibrary, BlockView defaultPrefab = null)
+        public BlockViewFactory(SkinLibrary skinLibrary, BlockView defaultPrefab = null)
         {
-            m_Theme = skinLibrary;
+            m_SkinLibrary = skinLibrary;
             m_DefaultPrefab = defaultPrefab;
         }
 
@@ -45,9 +45,9 @@ namespace Blocks.UI
             return view;
         }
         
-        private Sprite ResolveSprite(Block block, IconTier tier)
+        private Sprite ResolveSprite(Block block, int slotIndex)
         {
-            return m_Theme.GetBlockSkin(block.GetCategory(), block.GetTypeId(), tier);
+            return m_SkinLibrary.Resolve(block, slotIndex);
         }
 
         public void ReleaseView(BlockView blockView)

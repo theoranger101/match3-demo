@@ -131,6 +131,12 @@ namespace Grid
             m_EmptiedCells.Add(pos);
 
             RemoveBlock(pos);
+
+            if (evt.Block.GetCategory() == BlockCategory.Obstacle)
+            {
+                return;
+            }
+            
             DamageAdjacentObstacles(pos);
         }
 

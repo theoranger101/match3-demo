@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Blocks;
+using Blocks.Data;
 using UnityEngine;
 
 namespace LevelManagement.Data
@@ -41,7 +42,7 @@ namespace LevelManagement.Data
         [Header("Rules")]
         public bool RemapColorsOnRetry = true; // keep shape, shuffle colors
         public LevelRules LevelRules;
-        public GameTheme GameTheme;
+        public SkinLibrary GameTheme;
         
         [Header("Win/Meta")] 
         public int MoveCount;

@@ -12,16 +12,16 @@ namespace Blocks.UI
         public SpriteRenderer SpriteRenderer;
         public Block Block { get; private set; }
 
-        private Func<Block, IconTier, Sprite> m_ResolveSprite;
-        
-        public virtual void Init(Block block, Func<Block, IconTier, Sprite> spriteResolver)
+        private Func<Block, int, Sprite> m_ResolveSprite;
+
+        public virtual void Init(Block block, Func<Block, int, Sprite> spriteResolver)
         {
             Debug.Log("Initializing BlockView with block: " + block.GetType() + " at position " + block.GridPosition);
 
             Block = block;
 
             m_ResolveSprite = spriteResolver;
-            UpdateIcon(m_ResolveSprite(block, IconTier.Default));
+            UpdateIcon(m_ResolveSprite(block, (int)IconTier.Default));
             UpdateSortingOrder();
 
             SubscribeEvents();
@@ -40,15 +40,13 @@ namespace Blocks.UI
         protected virtual void SubscribeEvents()
         {
             GEM.Subscribe<BlockEvent>(HandleBlockPopped, (int)BlockEventType.BlockPopped);
-            Block.AddListener<BlockEvent>(HandleTierUpdated, (int)BlockEventType.BlockTierUpdated);
-            Block.AddListener<BlockEvent>(HandleGroupUpdated, (int)BlockEventType.BlockGroupUpdated);
+            Block.AddListener<BlockEvent>(HandleUpdateAppearance, (int)BlockEventType.BlockAppearanceUpdated);
         }
 
         protected virtual void UnsubscribeEvents()
         {
             GEM.Unsubscribe<BlockEvent>(HandleBlockPopped, (int)BlockEventType.BlockPopped);
-            Block.RemoveListener<BlockEvent>(HandleTierUpdated, (int)BlockEventType.BlockTierUpdated);
-            Block.RemoveListener<BlockEvent>(HandleGroupUpdated, (int)BlockEventType.BlockGroupUpdated);
+            Block.RemoveListener<BlockEvent>(HandleUpdateAppearance, (int)BlockEventType.BlockAppearanceUpdated);
         }
 
         private void OnMouseDown()
@@ -56,14 +54,9 @@ namespace Blocks.UI
             OnClick();
         }
 
-        private void HandleTierUpdated(BlockEvent blockEvent)
+        private void HandleUpdateAppearance(BlockEvent blockEvent)
         {
-            UpdateIcon(m_ResolveSprite(Block, blockEvent.Tier));
-        }
-
-        private void HandleGroupUpdated(BlockEvent blockEvent)
-        {
-            UpdateIcon(m_ResolveSprite(Block, IconTier.Default));
+            UpdateIcon(m_ResolveSprite(Block, blockEvent.Index));
         }
 
         private void HandleBlockPopped(BlockEvent blockEvent)

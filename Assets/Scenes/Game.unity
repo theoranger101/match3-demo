@@ -319,7 +319,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   LevelDefinitions:
-  - {fileID: 11400000, guid: 6b0f5ab295f59456f97127c50f2bc97d, type: 2}
   - {fileID: 11400000, guid: fc71961cb2ce14c208f4b954d7a31279, type: 2}
   LevelController: {fileID: 591618161}
   CurrentLevelIndex: 0

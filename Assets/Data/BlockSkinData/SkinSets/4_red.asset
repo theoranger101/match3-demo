@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6973cdd24bb04e128e14cc73d22bc8ea, type: 3}
+  m_Name: 4_red
+  m_EditorClassIdentifier: 
+  SkinId: 4
+  Slots:
+  - {fileID: 21300000, guid: e791f032f51a44277b33303f6f2d90fb, type: 3}
+  - {fileID: 21300000, guid: 3576016a117474a89b640157d2f076a9, type: 3}
+  - {fileID: 21300000, guid: 59a99e12aa5b948aca7b084769fc9e60, type: 3}
+  - {fileID: 21300000, guid: e34b9935168cb48f9b15454331cf0167, type: 3}

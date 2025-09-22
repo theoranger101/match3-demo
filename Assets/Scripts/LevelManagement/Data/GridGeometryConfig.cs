@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace LevelManagement.Data
 {
-    [CreateAssetMenu(fileName = "GridGeometryConfig", menuName = "Level/GridGeometryConfig")]
+    [CreateAssetMenu(fileName = "GridGeometryConfig", menuName = "Levels/GridGeometryConfig")]
     public sealed class GridGeometryConfig : ScriptableObject
     {
         [Header("Layout")] 

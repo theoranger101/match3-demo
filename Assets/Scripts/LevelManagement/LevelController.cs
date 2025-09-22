@@ -1,5 +1,6 @@
 using System.Collections;
 using Blocks;
+using Blocks.Data;
 using LevelManagement.Data;
 using UnityEngine;
 using Utilities.Events;
@@ -64,7 +65,7 @@ namespace LevelManagement
         }
 
         public LevelDefinition ActiveLevel => m_ActiveLevel;
-        public GameTheme ActiveTheme => m_ActiveLevel.GameTheme;
+        public SkinLibrary ActiveTheme => m_ActiveLevel.GameTheme;
         public LevelRules ActiveRules => m_ActiveLevel.LevelRules;
     }
 }

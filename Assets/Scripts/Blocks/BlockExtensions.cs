@@ -26,9 +26,9 @@ namespace Blocks
 
         public static void SetTier(this Block block, IconTier tier = IconTier.Default)
         {
-            using (var tierEvt = BlockEvent.Get(block, tier))
+            using (var tierEvt = BlockEvent.Get(block, (int)tier))
             {
-                block.SendEvent(tierEvt,(int)BlockEventType.BlockTierUpdated);
+                block.SendEvent(tierEvt,(int)BlockEventType.BlockAppearanceUpdated);
             }
         }
         
@@ -48,7 +48,15 @@ namespace Blocks
             
             using (var groupEvt = BlockEvent.Get(block, groupId))
             {
-                block.SendEvent(groupEvt,(int)BlockEventType.BlockGroupUpdated);
+                block.SendEvent(groupEvt,(int)BlockEventType.BlockAppearanceUpdated);
+            }
+        }
+
+        public static void UpdateAppearance(this Block block, int slotIndex)
+        {
+            using (var updateEvt = BlockEvent.Get(block, slotIndex))
+            {
+                block.SendEvent(updateEvt, (int)BlockEventType.BlockAppearanceUpdated);
             }
         }
     }

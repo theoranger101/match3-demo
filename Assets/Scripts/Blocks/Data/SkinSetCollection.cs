@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Blocks.Data
 {
-    public enum IconTier : sbyte
+    public enum IconTier : byte
     {
         Default = 0,
         A = 1,
@@ -12,6 +12,7 @@ namespace Blocks.Data
         C = 3,
     }
 
+    /*
     [Serializable]
     public struct SkinSet
     {
@@ -32,6 +33,7 @@ namespace Blocks.Data
             };
         }
     }
+
 
     [CreateAssetMenu(fileName = "SkinSetCollection", menuName = "Levels/Skin Set Collection")]
     public sealed class SkinSetCollection : ScriptableObject
@@ -87,4 +89,6 @@ namespace Blocks.Data
             };
         }
     }
+
+        */
 }

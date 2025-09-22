@@ -1,6 +1,4 @@
-using Blocks.Data;
 using Blocks.UI;
-using LevelManagement;
 using Utilities.Events;
 
 namespace Blocks
@@ -11,14 +9,14 @@ namespace Blocks
         BlockPopped = 2,
         BlockGroupUpdated = 3,
         BlockTierUpdated = 4,
+        BlockAppearanceUpdated = 5,
     }
     
     public class BlockEvent : Event<BlockEvent>
     {
         public Block Block;
         public BlockView BlockView;
-        public IconTier Tier;
-        public int MatchGroupId;
+        public int Index;
 
         public static BlockEvent Get(Block block)
         {
@@ -28,11 +26,11 @@ namespace Blocks
             return evt;
         }
         
-        public static BlockEvent Get(Block block, int matchGroupId)
+        public static BlockEvent Get(Block block, int index)
         {
             var evt = GetPooledInternal();
             evt.Block = block;
-            evt.MatchGroupId = matchGroupId;
+            evt.Index = index;
             
             return evt;
         }
@@ -41,15 +39,6 @@ namespace Blocks
         {
             var evt = GetPooledInternal();
             evt.BlockView = blockView;
-            
-            return evt;
-        }
-
-        public static BlockEvent Get(Block block, IconTier tier)
-        {
-            var evt = GetPooledInternal();
-            evt.Block = block;
-            evt.Tier = tier;
             
             return evt;
         }
