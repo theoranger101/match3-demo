@@ -16,6 +16,21 @@ namespace Utilities.Pooling
             return s_Queue.Dequeue();
         }
 
+        public static Queue<T> Get(List<T> list)
+        {
+            var queue = Get();
+            
+            using (IEnumerator<T> en = list.GetEnumerator()) 
+            {
+                while(en.MoveNext()) 
+                {
+                    queue.Enqueue(en.Current);
+                }
+            }   
+            
+            return queue;
+        }
+        
         public static void Release(Queue<T> queue)
         {
             queue.Clear();

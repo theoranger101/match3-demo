@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Blocks.Data;
 using LevelManagement.Data;
 using UnityEngine;
 using Utilities.Pooling;
@@ -35,15 +36,18 @@ namespace Blocks.UI
 
         public BlockView SpawnView(Block block, Transform parent)
         {
-            var skinSet = m_Theme.GetBlockEntry(block.GetCategory(), block.GetTypeId());
-            
             var pool = GetOrCreatePool(m_DefaultPrefab, parent);
             var view = pool.Get(parent);
             
-            view.Init(block, skinSet);
+            view.Init(block, ResolveSprite);
             m_InstanceToPool.Add(view, pool);
             
             return view;
+        }
+        
+        private Sprite ResolveSprite(Block block, IconTier tier)
+        {
+            return m_Theme.GetBlockSkin(block.GetCategory(), block.GetTypeId(), tier);
         }
 
         public void ReleaseView(BlockView blockView)

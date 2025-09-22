@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Blocks;
 using Blocks.UI;
 using DG.Tweening;
+using LevelManagement.Data;
 using UnityEngine;
 using Utilities.DI;
 using Utilities.Events;
@@ -15,13 +16,9 @@ namespace Grid.UI
         private Dictionary<Block, BlockView> m_ActiveBlockViews = new();
 
         [Inject] private BlockViewFactory m_BlockViewFactory;
+        [Inject] private GridGeometryConfig m_GeometryConfig;
 
         private Sequence m_BlockMovementSequence;
-
-        private float m_DefaultStartPosition => 10f;
-
-        public Vector2 CellSize; // world units
-        public Vector2 Origin = Vector2.zero;
         
         private void OnEnable()
         {
@@ -99,8 +96,10 @@ namespace Grid.UI
                 return;
             }
 
-            var targetPos = GridToWorld(block.GridPosition);
-            var startPos = m_DefaultStartPosition * Vector2.up + targetPos; // TODO: can definitely be improved
+            var gp = block.GridPosition;
+            
+            var targetPos = GridToWorld(gp);
+            var startPos = GetSpawnPosition(gp);
             view.transform.localPosition = startPos;
             MoveBlockView(view, targetPos);
 
@@ -138,7 +137,8 @@ namespace Grid.UI
             view.UpdateSortingOrder();
         }
 
-        public Vector2 GridToWorld(Vector2Int gp) => new(Origin.x + gp.x * CellSize.x, Origin.y + gp.y * CellSize.y);
+        private Vector2 GridToWorld(Vector2Int gp) => m_GeometryConfig.GridToWorld(gp);
+        private Vector2 GetSpawnPosition(Vector2Int gp) => m_GeometryConfig.GetSpawnStartAbove(gp);
 
         /*
         // TODO: magic numbersss

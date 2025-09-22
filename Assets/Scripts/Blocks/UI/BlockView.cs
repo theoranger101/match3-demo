@@ -1,6 +1,7 @@
+using System;
 using Blocks.Data;
-using LevelManagement;
 using UnityEngine;
+using Utilities.DI;
 using Utilities.Events;
 
 namespace Blocks.UI
@@ -11,16 +12,16 @@ namespace Blocks.UI
         public SpriteRenderer SpriteRenderer;
         public Block Block { get; private set; }
 
-        private SkinSet m_SkinSet;
-
-        public virtual void Init(Block block, SkinSet skinSet)
+        private Func<Block, IconTier, Sprite> m_ResolveSprite;
+        
+        public virtual void Init(Block block, Func<Block, IconTier, Sprite> spriteResolver)
         {
             Debug.Log("Initializing BlockView with block: " + block.GetType() + " at position " + block.GridPosition);
 
             Block = block;
-            m_SkinSet = skinSet;
 
-            UpdateIcon(m_SkinSet.IconDefault);
+            m_ResolveSprite = spriteResolver;
+            UpdateIcon(m_ResolveSprite(block, IconTier.Default));
             UpdateSortingOrder();
 
             SubscribeEvents();
@@ -39,13 +40,15 @@ namespace Blocks.UI
         protected virtual void SubscribeEvents()
         {
             GEM.Subscribe<BlockEvent>(HandleBlockPopped, (int)BlockEventType.BlockPopped);
-            Block.AddListener<BlockEvent>(HandleTierUpdated, (int)BlockEventType.TierUpdated);
+            Block.AddListener<BlockEvent>(HandleTierUpdated, (int)BlockEventType.BlockTierUpdated);
+            Block.AddListener<BlockEvent>(HandleGroupUpdated, (int)BlockEventType.BlockGroupUpdated);
         }
 
         protected virtual void UnsubscribeEvents()
         {
             GEM.Unsubscribe<BlockEvent>(HandleBlockPopped, (int)BlockEventType.BlockPopped);
-            Block.RemoveListener<BlockEvent>(HandleTierUpdated, (int)BlockEventType.TierUpdated);
+            Block.RemoveListener<BlockEvent>(HandleTierUpdated, (int)BlockEventType.BlockTierUpdated);
+            Block.RemoveListener<BlockEvent>(HandleGroupUpdated, (int)BlockEventType.BlockGroupUpdated);
         }
 
         private void OnMouseDown()
@@ -55,7 +58,12 @@ namespace Blocks.UI
 
         private void HandleTierUpdated(BlockEvent blockEvent)
         {
-            UpdateIcon(m_SkinSet.GetSprite(blockEvent.Tier));
+            UpdateIcon(m_ResolveSprite(Block, blockEvent.Tier));
+        }
+
+        private void HandleGroupUpdated(BlockEvent blockEvent)
+        {
+            UpdateIcon(m_ResolveSprite(Block, IconTier.Default));
         }
 
         private void HandleBlockPopped(BlockEvent blockEvent)

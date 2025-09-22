@@ -12,9 +12,7 @@ namespace LevelManagement
         public List<LevelDefinition> LevelDefinitions;
         public LevelController LevelController;
         
-        public int CurrentLevel;
-
-        public Camera MainCamera;
+        public int CurrentLevelIndex;
         
         private IEnumerator Start()
         {
@@ -25,7 +23,7 @@ namespace LevelManagement
 
         public void StartLevel(int? level = null)
         {
-            var lvl = level ?? CurrentLevel;
+            var lvl = level ?? CurrentLevelIndex;
 
             if (lvl >= LevelDefinitions.Count)
             {
@@ -33,26 +31,16 @@ namespace LevelManagement
                 return;
             }
             
-            CurrentLevel = lvl;
-            LevelController.SetActiveLevel(LevelDefinitions[lvl]);
+            CurrentLevelIndex = lvl;
+            var selectedLevelDefinition = LevelDefinitions[lvl];
+            LevelController.SetActiveLevel(selectedLevelDefinition);
             
-            using (var startEvt = LevelEvent.Get())
+            using (var startEvt = LevelEvent.Get(selectedLevelDefinition))
             {
                 startEvt.SendGlobal((int)LevelEventType.StartLevel);
             }
             
             LevelController.StartLevel();
-            SetUpCamera();
-        }
-
-        private void SetUpCamera()
-        {
-            var cols = LevelDefinitions[CurrentLevel].LevelRules.Columns;
-            var rows = LevelDefinitions[CurrentLevel].LevelRules.Rows;
-            
-            CameraFitter.Fit(MainCamera, cols, rows, 1f, 0.5f);
-            var center = new Vector3((cols - 1) * 0.5f, (rows - 1) * 0.5f, -10f);
-            MainCamera.transform.position = center;
         }
     }
 }

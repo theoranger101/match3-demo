@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using Blocks;
+using LevelManagement;
 using UnityEngine;
+using Utilities.DI;
 using Utilities.Events;
 using Utilities.Pooling;
 using Random = UnityEngine.Random;
@@ -10,6 +12,8 @@ namespace Grid
     // TODO: does it need to be monobehaviour?
     public class GridRefillController : MonoBehaviour
     {
+        [Inject] private LevelRules m_ActiveRules;
+        
         private void OnEnable()
         {
             GEM.Subscribe<GridEvent>(HandleRefillRequest, channel: (int)GridEventType.TriggerRefill);
@@ -92,13 +96,13 @@ namespace Grid
                 targetY++;
             }
 
-            // Fill the remaining empty spaces in the column with new blocks
+            // fill the remaining empty spaces in the column with new blocks
             for (var fillY = targetY; fillY < column.Count; fillY++)
             {
                 var randomSpawnData = new BlockSpawnData
                 {
                     Category = BlockCategory.Match,
-                    MatchGroupId = Random.Range(0, 4), // TODO: get count from level rules
+                    MatchGroupId = Random.Range(0, m_ActiveRules.ColorCount), 
                     GridPosition = new Vector2Int(columnIndex, fillY)
                 };
 

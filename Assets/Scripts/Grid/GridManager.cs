@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using Blocks;
 using Blocks.Types;
 using Grid.ClickStrategies;
@@ -56,10 +57,10 @@ namespace Grid
         // private static readonly ObstacleBlockClickStrategy s_ObstacleClick = new();
 
         #endregion
-        
-        [Inject] private Action<Block[,]> m_RecomputeExistingMatches;
 
         private bool m_IsResetting;
+
+        [Inject] private LevelRules m_ActiveRules;
 
         private void OnEnable()
         {
@@ -106,12 +107,12 @@ namespace Grid
         }
 
         #region Event Handlers
-        
+
         private void HandleInitGrid(LevelEvent evt)
         {
             InitGrid(evt.GridSize, evt.LevelData);
         }
-        
+
         private void HandleResetGrid(LevelEvent evt)
         {
             ResetGrid();
@@ -126,7 +127,7 @@ namespace Grid
                 RemoveBlock(pos);
                 return;
             }
-            
+
             m_EmptiedCells.Add(pos);
 
             RemoveBlock(pos);
@@ -185,8 +186,8 @@ namespace Grid
 
                 AddBlock(block, position);
             }
-            
-            m_RecomputeExistingMatches?.Invoke(m_Grid);
+
+            AnalyzeGrid(true);
         }
 
         public void ResetGrid()
@@ -348,10 +349,10 @@ namespace Grid
             var gridWidth = m_Grid.GetLength(0);
             var gridHeight = m_Grid.GetLength(1);
 
-            for (var i = 0; i < UtilityExtensions.kFour.Length; i++)
+            for (var i = 0; i < GridMath.kFour.Length; i++)
             {
-                var index = gridPosition + UtilityExtensions.kFour[i];
-                if (index.x < 0 || index.x >= gridWidth || index.y < 0 || index.y >= gridHeight)
+                var index = gridPosition + GridMath.kFour[i];
+                if (!GridMath.InBounds(index.x, index.y, gridWidth, gridHeight))
                 {
                     continue;
                 }
@@ -495,9 +496,58 @@ namespace Grid
             {
                 refillEvt.SendGlobal((int)GridEventType.TriggerRefill);
             }
+
+            AnalyzeGrid(true);
+        }
+
+        // TODO: i don't love this part
+        private void AnalyzeGrid(bool fullScan = false)
+        {
+            var result = GridAnalyzer.Run(m_Grid, m_EmptiedCells, m_ActiveRules, fullScan);
             
-            // MatchIconTierService.Recompute(m_Grid, LevelController.GetLevelDefinition().LevelRules);
-            m_RecomputeExistingMatches?.Invoke(m_Grid);
+            if (!result.HasAnyPair)
+            {
+                var plan = ShufflePlanner.PlanShuffle(m_Grid, result.MatchableCells, result.MatchGroupCounts);
+                
+                var dirty = HashSetPool<Vector2Int>.Get();
+                for (var i = 0; i < plan.Count; i++)
+                {
+                    var assignment = plan[i];
+                    
+                    if (m_Grid[assignment.GridPosition.x, assignment.GridPosition.y] is not MatchBlock matchBlock)
+                    {
+                        continue;
+                    }
+                    
+                    matchBlock.SetGroup(assignment.MatchGroupId);
+                    dirty.Add(matchBlock.GridPosition);
+                }
+
+                var postResult = GridAnalyzer.Run(m_Grid, dirty, m_ActiveRules, false);
+                
+                for (var i = 0; i < postResult.TierUpdates.Count; i++)
+                {
+                    var tu = postResult.TierUpdates[i];
+                    tu.Block.SetTier(tu.NewTier);
+                }
+                
+                return;
+            }
+            
+            for (var i = 0; i < result.TierUpdates.Count; i++)
+            {
+                var tu = result.TierUpdates[i];
+                tu.Block.SetTier(tu.NewTier);
+            }
+        }
+
+        private Func<Block[,], IReadOnlyList<Vector2Int>, IReadOnlyDictionary<int, int>,
+            List<ShufflePlanner.ShuffleAssignment>> m_PlanShuffle;
+
+        private void TryShuffleIfDeadlocked(IReadOnlyList<Vector2Int> matchableCells,
+            IReadOnlyDictionary<int, int> groupCounts)
+        {
+            m_PlanShuffle?.Invoke(m_Grid, matchableCells, groupCounts);
         }
 
         #endregion

@@ -9,7 +9,8 @@ namespace Blocks
         BlockCreated = 0,
         BlockClicked = 1,
         BlockPopped = 2,
-        TierUpdated = 3,
+        BlockGroupUpdated = 3,
+        BlockTierUpdated = 4,
     }
     
     public class BlockEvent : Event<BlockEvent>
@@ -17,11 +18,21 @@ namespace Blocks
         public Block Block;
         public BlockView BlockView;
         public IconTier Tier;
+        public int MatchGroupId;
 
         public static BlockEvent Get(Block block)
         {
             var evt = GetPooledInternal();
             evt.Block = block;
+            
+            return evt;
+        }
+        
+        public static BlockEvent Get(Block block, int matchGroupId)
+        {
+            var evt = GetPooledInternal();
+            evt.Block = block;
+            evt.MatchGroupId = matchGroupId;
             
             return evt;
         }

@@ -28,7 +28,27 @@ namespace Blocks
         {
             using (var tierEvt = BlockEvent.Get(block, tier))
             {
-                block.SendEvent(tierEvt,(int)BlockEventType.TierUpdated);
+                block.SendEvent(tierEvt,(int)BlockEventType.BlockTierUpdated);
+            }
+        }
+        
+        public static void SetGroup(this MatchBlock block, int groupId = -1)
+        {
+            if (groupId < 0)
+            {
+                throw new Exception("Invalid match group ID!");
+            }
+
+            if (groupId == block.MatchGroupId)
+            {
+                return;
+            }
+            
+            block.MatchGroupId = groupId;
+            
+            using (var groupEvt = BlockEvent.Get(block, groupId))
+            {
+                block.SendEvent(groupEvt,(int)BlockEventType.BlockGroupUpdated);
             }
         }
     }
