@@ -159,7 +159,7 @@ This batching model also makes it easier to add effects/animations later (e.g., 
 - Runs DFS/BFS per component **once**, emitting:
   - `HasAnyPair`, `MatchGroupCounts`, `MatchableCells`.
   - `Appearances` (slot indices) to update all relevant views **in a single pass**.
-  - 
+
 ---
 
 ## 🎨 Editor Tooling
