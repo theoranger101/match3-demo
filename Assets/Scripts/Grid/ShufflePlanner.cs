@@ -28,22 +28,77 @@ namespace Grid
         private static int s_UsedStampTick;
         private static int[,] s_UsedStamp;
 
-        public static List<ShuffleAssignment> PlanShuffle(Block[,] grid,
-            IReadOnlyList<Vector2Int> matchableCells = null, IReadOnlyDictionary<int, int> groupCounts = null,
-            Random rng = null)
+        public static List<ShuffleAssignment> PlanShuffle(Block[,] grid, IReadOnlyList<Vector2Int> matchableCells = null, 
+            IReadOnlyDictionary<int, int> groupCounts = null, int maxPairs = int.MaxValue, Random rng = null)
         {
             rng ??= new Random();
 
             var w = grid.GetLength(0);
             var h = grid.GetLength(1);
 
+            // pooled containers
             var cells = ListPool<Vector2Int>.Get();
             var singles = ListPool<Vector2Int>.Get();
             var neighbors = ListPool<Vector2Int>.Get();
             var pairs = ListPool<(Vector2Int A, Vector2Int B)>.Get();
+            var counts = DictionaryPool<int, int>.Get();
+            var pairQuotas = ListPool<(int groupId, int need)>.Get();
+            var assignments = ListPool<ShuffleAssignment>.Get();
 
-            var counts = DictionaryPool<int,int>.Get();
-            counts.Clear();
+            try
+            {
+                counts.Clear();
+
+                // collect matchable cells + build counts
+                CollectCellsAndCounts(grid, matchableCells, groupCounts, w, h, cells, counts);
+
+                // nothing to do
+                if (cells.Count <= 1)
+                    return assignments;
+
+                // randomize cell visit order
+                ShuffleInPlace(cells, rng);
+
+                // used-stamp prep
+                EnsureStampSize(w, h);
+                s_UsedStampTick++;
+
+                // build adjacent pairs (or mark as singles)
+                BuildAdjacentPairs(grid, w, h, cells, neighbors, pairs, singles, rng);
+
+                // build pair quotas from counts
+                BuildPairQuotas(counts, pairQuotas);
+
+                // distribute pairs/singles
+                ShuffleInPlace(pairs, rng);
+
+                if (maxPairs != int.MaxValue)
+                {
+                    AssignLimitedPairsThenSingles(
+                        grid, counts, pairQuotas, pairs, singles, maxPairs, assignments);
+                }
+                else
+                {
+                    AssignMaxPairsThenSingles(
+                        counts, pairQuotas, pairs, singles, assignments);
+                }
+
+                return assignments;
+            }
+            finally
+            {
+                ListPool<Vector2Int>.Release(cells);
+                ListPool<Vector2Int>.Release(singles);
+                ListPool<Vector2Int>.Release(neighbors);
+                ListPool<(Vector2Int A, Vector2Int B)>.Release(pairs);
+                ListPool<(int groupId, int need)>.Release(pairQuotas);
+                DictionaryPool<int, int>.Release(counts);
+            }
+        }
+
+        private static void CollectCellsAndCounts(Block[,] grid, IReadOnlyList<Vector2Int> matchableCells,
+            IReadOnlyDictionary<int, int> groupCounts, int w, int h, List<Vector2Int> cells, Dictionary<int, int> counts)
+        {
             if (groupCounts != null)
             {
                 foreach (var kv in groupCounts)
@@ -65,76 +120,61 @@ namespace Grid
                         }
 
                         var id = mb.MatchGroupId;
-                        counts[id] = counts.TryGetValue(id, out var count) ? count + 1 : 1;
+                        counts[id] = counts.TryGetValue(id, out var c) ? c + 1 : 1;
                     }
                 }
+
+                return;
             }
-            else
+
+            // full grid scan
+            for (var x = 0; x < w; x++)
             {
-                for (var x = 0; x < w; x++)
+                for (var y = 0; y < h; y++)
                 {
-                    for (var y = 0; y < h; y++)
+                    if (grid[x, y] is not MatchBlock mb)
                     {
-                        if (grid[x, y] is not MatchBlock mb)
-                        {
-                            continue;
-                        }
-
-                        cells.Add(new Vector2Int(x, y));
-
-                        if (groupCounts != null)
-                        {
-                            continue;
-                        }
-                        
-                        var id = mb.MatchGroupId;
-                        counts[id] = counts.TryGetValue(id, out var count) ? count + 1 : 1;
+                        continue;
                     }
+
+                    cells.Add(new Vector2Int(x, y));
+                    if (groupCounts != null)
+                    {
+                        continue;
+                    }
+
+                    var id = mb.MatchGroupId;
+                    counts[id] = counts.TryGetValue(id, out var c) ? c + 1 : 1;
                 }
             }
+        }
 
-            // nothing to shuffle
-            if (cells.Count <= 1)
-            {
-                ListPool<Vector2Int>.Release(cells);
-                ListPool<Vector2Int>.Release(singles);
-                ListPool<Vector2Int>.Release(neighbors);
-                ListPool<(Vector2Int A, Vector2Int B)>.Release(pairs);
-
-                return ListPool<ShuffleAssignment>.Get();
-            }
-
-            ShuffleInPlace(cells, rng);
-
-            EnsureStampSize(w, h);
-            s_UsedStampTick++;
-
+        private static void BuildAdjacentPairs(Block[,] grid, int w, int h, List<Vector2Int> cells, List<Vector2Int> neighbors,
+            List<(Vector2Int A, Vector2Int B)> pairs, List<Vector2Int> singles, Random rng)
+        {
             for (var i = 0; i < cells.Count; i++)
             {
                 var cell = cells[i];
-                if (IsUsed(cell))
-                {
-                    continue;
-                }
+                if (IsUsed(cell)) continue;
 
-                // gather neighbors
+                // collect up to 4 neighbors that are matchable
                 neighbors.Clear();
                 for (var k = 0; k < 4; k++)
                 {
-                    var neighborX = cell.x + GridMath.kFour[k].x;
-                    var neighborY = cell.y + GridMath.kFour[k].y;
+                    var nx = cell.x + GridMath.kFour[k].x;
+                    var ny = cell.y + GridMath.kFour[k].y;
 
-                    if (!GridMath.InBounds(neighborX, neighborY, w, h))
+                    if (!GridMath.InBounds(nx, ny, w, h))
                     {
                         continue;
                     }
 
-                    if (grid[neighborX, neighborY] is not MatchBlock mb)
+                    if (grid[nx, ny] is not MatchBlock)
                     {
                         continue;
                     }
 
-                    neighbors.Add(new Vector2Int(neighborX, neighborY));
+                    neighbors.Add(new Vector2Int(nx, ny));
                 }
 
                 ShuffleInPlace(neighbors, rng);
@@ -142,18 +182,18 @@ namespace Grid
                 var paired = false;
                 for (var n = 0; n < neighbors.Count; n++)
                 {
-                    var neighbor = neighbors[n];
-                    if (IsUsed(neighbor))
+                    var nb = neighbors[n];
+                    if (IsUsed(nb))
                     {
                         continue;
                     }
 
-                    // found a free adjacent match cell
                     MarkUsed(cell);
-                    MarkUsed(neighbor);
+                    MarkUsed(nb);
 
-                    pairs.Add((cell, neighbor));
+                    pairs.Add((cell, nb));
                     paired = true;
+
                     break;
                 }
 
@@ -162,23 +202,92 @@ namespace Grid
                     singles.Add(cell);
                 }
             }
+        }
 
-            // assign colors to pairs by quota: floor(count[groupId] / 2) pairs per group
-            var assignments = ListPool<ShuffleAssignment>.Get();
-            var pairQuotas = ListPool<(int groupId, int need)>.Get();
-
-            foreach (var groupCountPair in counts)
+        private static void BuildPairQuotas(Dictionary<int, int> counts, List<(int groupId, int need)> pairQuotas)
+        {
+            foreach (var kv in counts)
             {
-                var need = groupCountPair.Value / 2;
+                var need = kv.Value / 2;
                 if (need > 0)
                 {
-                    pairQuotas.Add((groupCountPair.Key, need));
+                    pairQuotas.Add((kv.Key, need));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Logic-preserving path when maxPairs is limited:
+        /// 1) Round-robin consume some pairs into assignments (respecting maxPairs),
+        /// 2) move the unused pairs back into singles,
+        /// 3) assign all singles using PickNonAdjacentOrAny (then PickAny).
+        /// </summary>
+        private static void AssignLimitedPairsThenSingles(Block[,] grid, Dictionary<int, int> counts, List<(int groupId, int need)> pairQuotas,
+            List<(Vector2Int A, Vector2Int B)> pairs, List<Vector2Int> singles, int maxPairs, List<ShuffleAssignment> assignments)
+        {
+            var pairIndex = 0;
+            var pairsMade = 0;
+
+            foreach (var groupId in RoundRobin(pairQuotas))
+            {
+                if (pairsMade >= maxPairs)
+                {
+                    break;
+                }
+
+                if (pairIndex >= pairs.Count)
+                {
+                    break;
+                }
+
+                var (pos1, pos2) = pairs[pairIndex++];
+                assignments.Add(new ShuffleAssignment(pos1, groupId));
+                assignments.Add(new ShuffleAssignment(pos2, groupId));
+                pairsMade++;
+                if (counts.ContainsKey(groupId))
+                {
+                    counts[groupId] -= 2;
                 }
             }
 
-            ShuffleInPlace(pairs, rng);
+            // leftover pairs -> singles
+            for (; pairIndex < pairs.Count; pairIndex++)
+            {
+                var (pos1, pos2) = pairs[pairIndex];
+                singles.Add(pos1);
+                singles.Add(pos2);
+            }
 
+            // assign singles safely
+            for (var i = 0; i < singles.Count; i++)
+            {
+                var pos = singles[i];
+
+                var groupId = PickNonAdjacentOrAny(counts, grid, pos);
+                if (groupId == int.MinValue)
+                {
+                    groupId = PickAny(counts);
+                }
+
+                assignments.Add(new ShuffleAssignment(pos, groupId));
+                if (counts.ContainsKey(groupId))
+                {
+                    counts[groupId] -= 1;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Logic-preserving path for "maximize pairs":
+        /// 1) Round-robin fill as many pairs as quotas allow,
+        /// 2) remaining pairs try TakeGroupWithAtLeast(2) else spill to singles,
+        /// 3) singles consume remaining counts with TakeGroupWithAtLeast(1) / PickAny.
+        /// </summary>
+        private static void AssignMaxPairsThenSingles(Dictionary<int, int> counts, List<(int groupId, int need)> pairQuotas,
+            List<(Vector2Int A, Vector2Int B)> pairs, List<Vector2Int> singles, List<ShuffleAssignment> assignments)
+        {
             var pairIndex = 0;
+
             foreach (var groupId in RoundRobin(pairQuotas))
             {
                 if (pairIndex >= pairs.Count) break;
@@ -186,19 +295,15 @@ namespace Grid
                 var (pos1, pos2) = pairs[pairIndex++];
                 assignments.Add(new ShuffleAssignment(pos1, groupId));
                 assignments.Add(new ShuffleAssignment(pos2, groupId));
-
                 counts[groupId] -= 2;
             }
 
-            // fill the remaining pairs with any group that still has >= 2 left
             for (; pairIndex < pairs.Count; pairIndex++)
             {
                 var (pos1, pos2) = pairs[pairIndex];
                 var groupId = TakeGroupWithAtLeast(counts, 2);
-
                 if (groupId == int.MinValue)
                 {
-                    // no color has 2 left -> treat rest as singles
                     singles.Add(pos1);
                     singles.Add(pos2);
                 }
@@ -206,12 +311,10 @@ namespace Grid
                 {
                     assignments.Add(new ShuffleAssignment(pos1, groupId));
                     assignments.Add(new ShuffleAssignment(pos2, groupId));
-
                     counts[groupId] -= 2;
                 }
             }
 
-            // place singles with whatever group remains
             for (var i = 0; i < singles.Count; i++)
             {
                 var pos = singles[i];
@@ -224,14 +327,6 @@ namespace Grid
                 assignments.Add(new ShuffleAssignment(pos, groupId));
                 counts[groupId] -= 1;
             }
-
-            ListPool<Vector2Int>.Release(cells);
-            ListPool<Vector2Int>.Release(singles);
-            ListPool<Vector2Int>.Release(neighbors);
-            ListPool<(Vector2Int A, Vector2Int B)>.Release(pairs);
-            ListPool<(int groupId, int need)>.Release(pairQuotas);
-
-            return assignments;
         }
 
         #region Helpers
@@ -255,7 +350,7 @@ namespace Grid
                 (list[i], list[j]) = (list[j], list[i]);
             }
         }
-        
+
         private static IEnumerable<int> RoundRobin(List<(int group, int need)> items)
         {
             var queue = QueuePool<(int group, int need)>.Get(items);
@@ -283,7 +378,10 @@ namespace Grid
         {
             foreach (var pairs in remaining)
             {
-                if (pairs.Value >= min) return pairs.Key;
+                if (pairs.Value >= min)
+                {
+                    return pairs.Key;
+                }
             }
 
             return int.MinValue;
@@ -291,8 +389,61 @@ namespace Grid
 
         private static int PickAny(Dictionary<int, int> counts)
         {
-            foreach (var kv in counts) return kv.Key;
+            foreach (var kv in counts)
+            {
+                return kv.Key;
+            }
+
             return 0;
+        }
+
+        private static int PickNonAdjacentOrAny(
+            Dictionary<int, int> counts, Block[,] grid, in Vector2Int pos)
+        {
+            // collect neighbor colors
+            var neigh = HashSetPool<int>.Get();
+            var w = grid.GetLength(0);
+            var h = grid.GetLength(1);
+
+            for (var k = 0; k < GridMath.kFour.Length; k++)
+            {
+                var nx = pos.x + GridMath.kFour[k].x;
+                var ny = pos.y + GridMath.kFour[k].y;
+                if (!GridMath.InBounds(nx, ny, w, h))
+                {
+                    continue;
+                }
+
+                if (grid[nx, ny] is MatchBlock mb)
+                {
+                    neigh.Add(mb.MatchGroupId);
+                }
+            }
+
+            foreach (var kv in counts)
+            {
+                if (kv.Value <= 0 || neigh.Contains(kv.Key))
+                {
+                    continue;
+                }
+
+                HashSetPool<int>.Release(neigh);
+                return kv.Key;
+            }
+
+            foreach (var kv in counts)
+            {
+                if (kv.Value <= 0)
+                {
+                    continue;
+                }
+
+                HashSetPool<int>.Release(neigh);
+                return kv.Key;
+            }
+
+            HashSetPool<int>.Release(neigh);
+            return int.MinValue;
         }
 
         #endregion

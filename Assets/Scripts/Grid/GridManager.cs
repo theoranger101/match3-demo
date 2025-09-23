@@ -512,7 +512,7 @@ namespace Grid
             {
                 yield return m_WaitForSeconds;
                 
-                var plan = ShufflePlanner.PlanShuffle(m_Grid, result.MatchableCells, result.MatchGroupCounts);
+                var plan = ShufflePlanner.PlanShuffle(m_Grid, result.MatchableCells, result.MatchGroupCounts, maxPairs: 1);
                 
                 var dirty = HashSetPool<Vector2Int>.Get();
                 for (var i = 0; i < plan.Count; i++)
