@@ -8,7 +8,7 @@ namespace Utilities
     {
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
         private const string PrefKey = "ZzzLog.Enabled";
-        private static bool s_Enabled = true;
+        private static bool s_Enabled = false;
 
         static ZzzLog()
         {

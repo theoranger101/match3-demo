@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using Blocks;
@@ -221,7 +222,7 @@ namespace Grid
                 AddBlock(block, position);
             }
 
-            AnalyzeGrid(true);
+            StartCoroutine(AnalyzeGrid(true));
         }
 
         /// <summary>
@@ -461,6 +462,8 @@ namespace Grid
         
         #region Grid Actions Resolution
 
+        private WaitForSeconds m_WaitForSeconds = new(0.5f);
+        
         private void BeginResolution()
         {
             m_BatchDepth++;
@@ -493,16 +496,22 @@ namespace Grid
                 refillEvt.SendGlobal((int)GridEventType.TriggerRefill);
             }
             
-            AnalyzeGrid(true);
+            StartCoroutine(AnalyzeGrid(true));
         }
 
-        // TODO: i don't love this part
-        private void AnalyzeGrid(bool fullScan = false)
+        /// <summary>
+        /// Analyzes the grid for existing connected match groups,
+        /// provides results to update <see cref="IconTier"/> of <see cref="MatchBlock"/> (UI appearance).
+        /// If no matches are found, plans a shuffle (includes a short showcase delay).
+        /// </summary>
+        private IEnumerator AnalyzeGrid(bool fullScan = false)
         {
             var result = GridAnalyzer.Run(m_Grid, m_EmptiedCells, m_ActiveRules, fullScan);
             
             if (!result.HasAnyPair)
             {
+                yield return m_WaitForSeconds;
+                
                 var plan = ShufflePlanner.PlanShuffle(m_Grid, result.MatchableCells, result.MatchGroupCounts);
                 
                 var dirty = HashSetPool<Vector2Int>.Get();
@@ -533,7 +542,10 @@ namespace Grid
                     b.SetTier((IconTier)u.SlotIndex);          
                 }
                 
-                return;
+                HashSetPool<Vector2Int>.Release(dirty);
+                ListPool<ShufflePlanner.ShuffleAssignment>.Release(plan);
+                
+                yield break;
             }
             
             for (var i = 0; i < result.Appearances.Count; i++)
