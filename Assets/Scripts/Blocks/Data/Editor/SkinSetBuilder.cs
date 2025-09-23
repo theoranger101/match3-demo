@@ -4,17 +4,31 @@ using System.IO;
 using Blocks.Data;
 using UnityEditor;
 using UnityEngine;
+using Utilities;
 
+/// <summary>
+/// Editor utility that scans a source folder tree and creates a <see cref="SkinSet"/>
+/// asset for each sub-folder whose name begins with an integer (e.g., "5_yellow").
+/// Each sprite directly inside that folder is placed into the set's Slots[] by
+/// parsing a leading integer from the file name (e.g., "0_Yellow_Default" → slot 0).
+/// Destination assets are written to the chosen output folder.
+/// </summary>
 public static class SkinSetBuilder
 {
     [MenuItem("Tools/Skins/Create SkinSets from Folder...")]
     private static void CreateSets()
     {
         var src = EditorUtility.OpenFolderPanel("Pick source root: ", "Assets", "");
-        if (string.IsNullOrEmpty(src)) return;
+        if (string.IsNullOrEmpty(src))
+        {
+            return;
+        }
 
         var dst = EditorUtility.OpenFolderPanel("Pick destination folder: ", "Assets", "");
-        if (string.IsNullOrEmpty(dst)) return;
+        if (string.IsNullOrEmpty(dst))
+        {
+            return;
+        }
 
         src = ToProjectRelative(src);
         dst = ToProjectRelative(dst);
@@ -64,7 +78,7 @@ public static class SkinSetBuilder
 
             if (slots.Count == 0)
             {
-                // Nothing usable in this folder, skip
+                // nothing usable in this folder, skip
                 continue;
             }
 
@@ -81,14 +95,15 @@ public static class SkinSetBuilder
 
             var assetPath = AssetDatabase.GenerateUniqueAssetPath(Path.Combine(dst, $"{so.name}.asset"));
             AssetDatabase.CreateAsset(so, assetPath);
-            Debug.Log($"[SkinSetBuilder] Created {assetPath} (setId={so.SkinId}, slots={so.Slots.Length})");
+            ZzzLog.Log($"[SkinSetBuilder] Created {assetPath} (setId={so.SkinId}, slots={so.Slots.Length})");
         }
 
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
     }
 
-    // --- helpers ---
+    #region Helpers
+
     private static IEnumerable<string> EnumerateAllSubfolders(string root)
     {
         var q = new Queue<string>();
@@ -133,5 +148,7 @@ public static class SkinSetBuilder
 
     private static bool IsUnderAssets(string path)
         => path.Replace('\\', '/').StartsWith("Assets/");
+
+    #endregion
 }
 #endif

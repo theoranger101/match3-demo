@@ -1,9 +1,14 @@
 using System;
-using UnityEngine;
+using Utilities;
+
 // using PowerUps.Strategies;
 
 namespace Blocks.Types
 {
+    /// <summary>
+    /// PowerUp block (activation behavior to be implemented). Falls with gravity and can be popped.
+    /// A PowerUp activation/strategy pipeline is not fully implemented in this build.
+    /// </summary>
     public class PowerUpBlock : Block
     {
         public PowerUpType Type;
@@ -23,7 +28,7 @@ namespace Blocks.Types
 
         public override void Pop()
         {
-            Debug.Log($"Activated PowerUpBlock {Type} at position {GridPosition}");
+            ZzzLog.Log($"Activated PowerUpBlock {Type} at position {GridPosition}");
             
             base.Pop();
         }

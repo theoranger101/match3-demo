@@ -1,7 +1,8 @@
 using System.Collections.Generic;
 using Blocks;
-using LevelManagement;
+using Levels;
 using UnityEngine;
+using Utilities;
 using Utilities.DI;
 using Utilities.Events;
 using Utilities.Pooling;
@@ -9,6 +10,9 @@ using Random = UnityEngine.Random;
 
 namespace Grid
 {
+    /// <summary>
+    /// Applies gravity and refills emptied cells by columns after pops/batches.
+    /// </summary>
     // TODO: does it need to be monobehaviour?
     public class GridRefillController : MonoBehaviour
     {
@@ -28,7 +32,7 @@ namespace Grid
         {
             if (evt.GridPositions == null || evt.GridPositions.Count == 0)
             {
-                Debug.LogWarning("No blocks to refill.");
+                ZzzLog.LogWarning("No blocks to refill.");
                 return;
             }
 
@@ -99,12 +103,9 @@ namespace Grid
             // fill the remaining empty spaces in the column with new blocks
             for (var fillY = targetY; fillY < column.Count; fillY++)
             {
-                var randomSpawnData = new BlockSpawnData
-                {
-                    Category = BlockCategory.Match,
-                    MatchGroupId = Random.Range(0, m_ActiveRules.ColorCount), 
-                    GridPosition = new Vector2Int(columnIndex, fillY)
-                };
+                var randomSpawnData = new BlockSpawnData(category: BlockCategory.Match,
+                    gridPosition: new Vector2Int(columnIndex, fillY),
+                    matchGroupId: Random.Range(0, m_ActiveRules.ColorCount));
 
                 var newBlock = BlockFactory.CreateBlock(randomSpawnData);
             }

@@ -13,7 +13,7 @@ namespace Utilities.Events
         
         public static void RemoveListener<T>(this object context, EventListener<T> listener,
             int channel = EventDispatcher.DefaultChannel)
-            where T : Event, new() => EventDispatcher.Unsubscribe(listener, channel);
+            where T : Event, new() => EventDispatcher.Unsubscribe(listener, context, channel);
 
         public static void SendEvent<T>(this object context, int channel = EventDispatcher.DefaultChannel)
             where T : Event<T>, new()

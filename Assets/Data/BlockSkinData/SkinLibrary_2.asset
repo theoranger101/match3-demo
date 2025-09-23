@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a234c82a9f447588790a27ee3c00f76, type: 3}
+  m_Name: SkinLibrary_2
+  m_EditorClassIdentifier: 
+  MatchSkins: {fileID: 11400000, guid: f0280c22b4e0448c992ad2f2adf89e2b, type: 2}
+  ObstacleSkins: {fileID: 11400000, guid: 7a6f6cae62fde459d8099f1903cd2d3f, type: 2}
+  PowerupSkins: {fileID: 11400000, guid: 4c27f667be3224a8280956d2d558c1c3, type: 2}

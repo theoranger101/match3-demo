@@ -2,11 +2,15 @@ using System.Collections.Generic;
 using Blocks;
 using Blocks.Types;
 using Grid.Utilities;
-using UnityEngine;
+using Utilities;
 using Utilities.Pooling;
 
 namespace Grid.MatchDetectionStrategies
 {
+    /// <summary>
+    /// Depth-first search match detection: finds the 4-neighbour connected component
+    /// of same-group <see cref="MatchBlock"/>s starting from a seed block.
+    /// </summary>
     public class DFSMatchDetectionStrategy : IMatchDetectionStrategy
     {
         public List<Block> FindConnectedMatches(Block startBlock, Block[,] grid)
@@ -35,7 +39,7 @@ namespace Grid.MatchDetectionStrategies
                 visited.Add(block);
                 connectedBlocks.Add(block);
 
-                Debug.Log("Visiting block at position: " + block.GridPosition + " of type: " + match.MatchGroupId + "");
+                ZzzLog.Log("Visiting block at position: " + block.GridPosition + " of type: " + match.MatchGroupId + "");
 
                 // check adjacent blocks (up, down, left, right)
                 var x = block.GridPosition.x;

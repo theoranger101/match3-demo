@@ -1,11 +1,14 @@
 using System;
-using Blocks.Data;
 using UnityEngine;
-using Utilities.DI;
+using Utilities;
 using Utilities.Events;
 
 namespace Blocks.UI
 {
+    /// <summary>
+    /// View component for a <see cref="Block"/>. 
+    /// Listens to block events and updates its sprite via an injected resolver.
+    /// </summary>
     [RequireComponent(typeof(SpriteRenderer))]
     public class BlockView : MonoBehaviour
     {
@@ -14,14 +17,21 @@ namespace Blocks.UI
 
         private Func<Block, int, Sprite> m_ResolveSprite;
 
+        private bool m_AcceptInput;
+
+        #region View Handlers
+
+        /// <summary>
+        /// Initializes the view with a block and a sprite resolver.
+        /// </summary>
         public virtual void Init(Block block, Func<Block, int, Sprite> spriteResolver)
         {
-            Debug.Log("Initializing BlockView with block: " + block.GetType() + " at position " + block.GridPosition);
+            ZzzLog.Log("Initializing BlockView with block: " + block.GetType() + " at position " + block.GridPosition, gameObject);
 
             Block = block;
 
             m_ResolveSprite = spriteResolver;
-            UpdateIcon(m_ResolveSprite(block, (int)IconTier.Default));
+            UpdateIcon(m_ResolveSprite(block, 0));
             UpdateSortingOrder();
 
             SubscribeEvents();
@@ -32,30 +42,40 @@ namespace Blocks.UI
             SpriteRenderer.sprite = sprite;
         }
 
+        /// <summary>
+        /// Sets the sorting order to match the block’s Y position.
+        /// </summary>
         public void UpdateSortingOrder()
         {
             SpriteRenderer.sortingOrder = Block.GridPosition.y;
         }
 
+        #endregion
+
+        #region Event Handlers
+
         protected virtual void SubscribeEvents()
         {
             GEM.Subscribe<BlockEvent>(HandleBlockPopped, (int)BlockEventType.BlockPopped);
             Block.AddListener<BlockEvent>(HandleUpdateAppearance, (int)BlockEventType.BlockAppearanceUpdated);
+            
+            m_AcceptInput = true;
         }
 
         protected virtual void UnsubscribeEvents()
         {
             GEM.Unsubscribe<BlockEvent>(HandleBlockPopped, (int)BlockEventType.BlockPopped);
             Block.RemoveListener<BlockEvent>(HandleUpdateAppearance, (int)BlockEventType.BlockAppearanceUpdated);
+            
+            m_AcceptInput = false;
         }
-
-        private void OnMouseDown()
-        {
-            OnClick();
-        }
-
+        
         private void HandleUpdateAppearance(BlockEvent blockEvent)
         {
+            if (blockEvent.Block != Block)
+            {
+                return;
+            }
             UpdateIcon(m_ResolveSprite(Block, blockEvent.Index));
         }
 
@@ -69,6 +89,29 @@ namespace Blocks.UI
             OnPopped();
         }
 
+        #endregion
+
+        #region Input Handlers
+
+        private void OnMouseDown()
+        {
+            if (!m_AcceptInput)
+            {
+                return;
+            }
+            
+            OnClick();
+        }
+        
+        public void ToggleInput(bool isOn)
+        {
+            m_AcceptInput = isOn;
+        }
+
+        #endregion
+
+        #region Behaviours - Click/Pop/Release
+
         private void OnClick()
         {
             if (Block != null)
@@ -80,7 +123,7 @@ namespace Blocks.UI
             }
             else
             {
-                Debug.LogWarning("Block is not assigned to BlockView.", gameObject);
+                ZzzLog.LogWarning("Block is not assigned to BlockView.", gameObject);
             }
         }
 
@@ -103,5 +146,8 @@ namespace Blocks.UI
             SpriteRenderer.sprite = null;
             transform.localScale = Vector3.one;
         }
+
+        #endregion
+        
     }
 }

@@ -1,9 +1,12 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace Blocks.Data
 {
+    /// <summary>
+    /// A table of <see cref="SkinSet"/>s, indexed either by list position (0..N-1)
+    /// or by explicit <see cref="SkinSet.SkinId"/> via a lookup dictionary.
+    /// </summary>
     [CreateAssetMenu(fileName = "SkinTable", menuName = "Blocks/Skin Table")]
     public sealed class SkinTable : ScriptableObject
     {
@@ -26,7 +29,7 @@ namespace Blocks.Data
             }
         }
 
-        public Sprite GetSkin(int setId, int slotIndex)
+        public Sprite GetSkinById(int setId, int slotIndex)
         {
             if (m_ById != null && m_ById.TryGetValue(setId, out var set))
             {
@@ -34,6 +37,16 @@ namespace Blocks.Data
             }
             
             return null;
+        }
+
+        public Sprite GetSkin(int setId, int slotIndex)
+        {
+            if (setId < 0 || setId >= SkinSets.Count)
+            {
+                return null;
+            }
+            
+            return SkinSets[setId].Get(slotIndex);
         }
     }
 }

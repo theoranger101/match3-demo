@@ -1,8 +1,12 @@
 using System;
-using UnityEngine;
+using Utilities;
 
 namespace Blocks.Types
 {
+    /// <summary>
+    /// Non-match obstacle block. May block gravity, requires damage to remove,
+    /// and cannot be popped directly by the player.
+    /// </summary>
     public class ObstacleBlock : Block
     {
         public ObstacleType Type;
@@ -19,10 +23,6 @@ namespace Blocks.Types
 
             switch (Type)
             {
-                case ObstacleType.Balloon:
-                    IsAffectedByGravity = true;
-                    Strength = 1;
-                    break;
                 case ObstacleType.WoodenBox:
                     IsAffectedByGravity = false;
                     Strength = 2;
@@ -37,7 +37,7 @@ namespace Blocks.Types
                 return;
             }
 
-            Debug.Log($"Popped ObstacleBlock {Type}");
+            ZzzLog.Log($"Popped ObstacleBlock {Type}");
             base.Pop();
         }
 
@@ -46,7 +46,7 @@ namespace Blocks.Types
         {
             if (IsPopped)
             {
-                Debug.LogWarning(
+                ZzzLog.LogWarning(
                     "Trying to reduce strength on an obstacle block that has already been popped. Block at position " +
                     GridPosition + " is already popped.");
                 return false;

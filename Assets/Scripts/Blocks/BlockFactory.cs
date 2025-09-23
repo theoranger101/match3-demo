@@ -7,6 +7,9 @@ using Utilities.Pooling;
 
 namespace Blocks
 {
+    /// <summary>
+    /// Creates and pools all block types. Emits <see cref="BlockEventType.BlockCreated"/> on spawn.
+    /// </summary>
     public static class BlockFactory
     {
         private static GenericPool<MatchBlock> s_MatchBlockPool = new();
@@ -32,30 +35,6 @@ namespace Blocks
 
             return block;
         }
-
-        /*
-        public static Block CreateRocket(in BlockSpawnData spawnData, GridAxis orientation)
-        {
-            var block = (PowerUpBlock) CreateBlock(spawnData);
-            ((RocketPowerUpStrategy)block.Strategy).Orientation = orientation;
-            
-            return block;
-        }
-        
-        public static Block CreateBomb(in BlockSpawnData spawnData)
-        {
-            var block = (PowerUpBlock) CreateBlock(spawnData);
-            return block;
-        }
-        
-        public static Block CreateDiscoBall(in BlockSpawnData spawnData, MatchBlockType targetType)
-        {
-            var block = (PowerUpBlock) CreateBlock(spawnData);
-            ((DiscoBallPowerUpStrategy)block.Strategy).TargetType = targetType;
-            
-            return block;
-        }
-        */
         
         public static void ReleaseBlock(Block block)
         {

@@ -1,13 +1,15 @@
 using System;
 using Blocks.Data;
 using Blocks.Types;
-using LevelManagement;
+using Levels;
+using Utilities;
 using Utilities.Events;
 
 namespace Blocks
 {
     public static class BlockExtensions
     {
+        /// <summary>Returns the high-level category for a given block instance.</summary>
         public static BlockCategory GetCategory(this Block block) => block switch 
         {
             MatchBlock => BlockCategory.Match,
@@ -16,6 +18,10 @@ namespace Blocks
             _ => throw new Exception("Unsupported block category: " + block.GetType())
         };
         
+        /// <summary>
+        /// Returns a category-specific type identifier used by the skin system:
+        /// Match -> group id, PowerUp/Obstacle -> enum as int.
+        /// </summary>
         public static int GetTypeId(this Block b) => b switch
         {
             MatchBlock m => m.MatchGroupId,
@@ -24,6 +30,9 @@ namespace Blocks
             _ => -1
         };
 
+        /// <summary>
+        /// Sends a <see cref="BlockEventType.BlockAppearanceUpdated"/> with a tier as index.
+        /// </summary>
         public static void SetTier(this Block block, IconTier tier = IconTier.Default)
         {
             using (var tierEvt = BlockEvent.Get(block, (int)tier))
@@ -32,6 +41,9 @@ namespace Blocks
             }
         }
         
+        /// <summary>
+        /// Updates a match block's group and broadcasts an appearance update(<see cref="BlockEventType.BlockAppearanceUpdated"/>)
+        /// </summary>
         public static void SetGroup(this MatchBlock block, int groupId = -1)
         {
             if (groupId < 0)
@@ -52,6 +64,9 @@ namespace Blocks
             }
         }
 
+        /// <summary>
+        /// Broadcasts a generic appearance update for the given slot index (skin slot).
+        /// </summary>
         public static void UpdateAppearance(this Block block, int slotIndex)
         {
             using (var updateEvt = BlockEvent.Get(block, slotIndex))

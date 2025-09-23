@@ -1,5 +1,5 @@
-using LevelManagement;
-using LevelManagement.Data;
+using Levels;
+using Levels.Data;
 using UnityEngine;
 using Utilities.DI;
 using Utilities.Events;

@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 29fc8690db43047a681409cd9f95cb5c, type: 3}
   m_Name: LevelRules
   m_EditorClassIdentifier: 
-  Rows: 8
-  Columns: 8
-  ColorCount: 4
-  TierA: 3
-  TierB: 4
-  TierC: 6
+  Rows: 10
+  Columns: 12
+  ColorCount: 6
+  TierA: 4
+  TierB: 7
+  TierC: 9
   Seed: 12345

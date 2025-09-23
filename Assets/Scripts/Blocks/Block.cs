@@ -1,4 +1,5 @@
 using UnityEngine;
+using Utilities;
 using Utilities.Events;
 
 namespace Blocks
@@ -14,18 +15,17 @@ namespace Blocks
     public enum PowerUpType
     {
         None = 0,
-        Rocket = 1,
-        Bomb = 2,
-        DiscoBall = 3,
     }
 
     public enum ObstacleType
     {
         None = 0,
-        Balloon = 1,
-        WoodenBox = 2,
+        WoodenBox = 1,
     }
 
+    /// <summary>
+    /// Abstract base for all block types. Owns lifecycle state (spawn/init/pop/release).
+    /// </summary>
     public abstract class Block
     {
         public Vector2Int GridPosition;
@@ -37,16 +37,19 @@ namespace Blocks
         
         public abstract void Init(in BlockSpawnData spawnData);
         
+        /// <summary>
+        /// Pops this block once. Sends a global <see cref="BlockEventType.BlockPopped"/> event.
+        /// </summary>
         public virtual void Pop()
         {
             if (IsPopped)
             {
-                Debug.LogWarning("Trying to pop a block that has already been popped. Block at position " +
-                                 GridPosition + " is already popped.");
+                ZzzLog.LogWarning("Trying to pop a block that has already been popped. Block at position " +
+                                  GridPosition + " is already popped.");
                 return;
             }
 
-            Debug.Log("Popped Block at position " + GridPosition + ".");
+            ZzzLog.Log("Popped Block at position " + GridPosition + ".");
             IsPopped = true;
             
             using (var poppedEvt = BlockEvent.Get(this))

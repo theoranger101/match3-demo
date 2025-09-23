@@ -1,11 +1,16 @@
 using System.Collections;
 using Blocks;
 using Blocks.Types;
-using UnityEngine;
+using Levels;
+using Utilities;
+using Utilities.Events;
 using Utilities.Pooling;
 
 namespace Grid.ClickStrategies
 {
+    /// <summary>
+    /// Handles clicks on match blocks: finds the connected group and pops them.
+    /// </summary>
     public class MatchBlockClickStrategy : IBlockClickStrategy
     {
         public IEnumerator ResolveClick(GridManager grid, Block block)
@@ -19,50 +24,23 @@ namespace Grid.ClickStrategies
 
             if (connected.Count <= 1)
             {
-                Debug.Log("No connected blocks found to pop at the specified position. Returning");
+                ZzzLog.Log("No connected blocks found to pop at the specified position. Returning");
                 ListPool<Block>.Release(connected);
 
                 yield break;
             }
 
+            using (var lvlEvt = LevelEvent.Get())
+            {
+                lvlEvt.SendGlobal((int)LevelEventType.ConsumeMove);
+            }
+            
             using (grid.ResolutionBatch)
             {
-                /*
-                var settings = GlobalSettings.Get();
-                var powerUpPlan = PowerUpRules.Plan(connected.Count, pressed, settings);
-
-                if (powerUpPlan.PowerUpToCreate != PowerUpToCreate.None)
-                {
-                    var powerUpEvt = PowerUpEvent.Get(pressed, powerUpPlan.PowerUpToCreate, connected);
-                    powerUpEvt.SendGlobal((int)PowerUpEventType.PowerUpCreated);
-
-                    yield return powerUpEvt.Tween.WaitForCompletion();
-
-                    pressed.Pop();
-                    grid.SpawnPowerUp(in powerUpPlan);
-
-                    for (var i = 0; i < connected.Count; i++)
-                    {
-                        var b = connected[i];
-                        if (!ReferenceEquals(b, pressed))
-                        {
-                            b.Pop();
-                        }
-                    }
-
-                    powerUpEvt.Dispose();
-                }
-                else
-                {
-                */
                 for (var i = 0; i < connected.Count; i++)
                 {
                     connected[i].Pop();
                 }
-
-                /*
-                }
-                */
             }
 
             ListPool<Block>.Release(connected);

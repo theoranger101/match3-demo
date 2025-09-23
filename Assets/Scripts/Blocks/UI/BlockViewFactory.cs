@@ -1,11 +1,14 @@
 using System.Collections.Generic;
 using Blocks.Data;
-using LevelManagement.Data;
 using UnityEngine;
+using Utilities;
 using Utilities.Pooling;
 
 namespace Blocks.UI
 {
+    /// <summary>
+    /// Spawns and pools <see cref="BlockView"/> instances and resolves their sprites via <see cref="SkinLibrary"/>.
+    /// </summary>
     public class BlockViewFactory
     {
         private readonly SkinLibrary m_SkinLibrary;
@@ -47,6 +50,12 @@ namespace Blocks.UI
         
         private Sprite ResolveSprite(Block block, int slotIndex)
         {
+            if (block == null)
+            {
+                ZzzLog.LogError("BlockViewFactory: ResolveSprite: requested block is null!");
+                return null;
+            }
+            
             return m_SkinLibrary.Resolve(block, slotIndex);
         }
 
@@ -54,7 +63,7 @@ namespace Blocks.UI
         {
             if (!m_InstanceToPool.Remove(blockView, out var pool))
             {
-                Debug.LogError("BlockView is not in any existing pools!");
+                ZzzLog.LogError("BlockView is not in any existing pools!");
                 return;
             }
 

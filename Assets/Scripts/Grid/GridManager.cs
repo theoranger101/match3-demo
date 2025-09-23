@@ -6,7 +6,7 @@ using Blocks.Types;
 using Grid.ClickStrategies;
 using Grid.MatchDetectionStrategies;
 using Grid.Utilities;
-using LevelManagement;
+using Levels;
 using UnityEngine;
 using Utilities;
 using Utilities.DI;
@@ -20,13 +20,20 @@ namespace Grid
         Row,
         Column
     }
-
-    public class GridManager : MonoBehaviour
+    
+    /// <summary>
+    /// Central grid orchestrator: owns the grid array, reacts to events (spawn/move/pop),
+    /// delegates click resolution strategies, handles refill, and runs analysis/shuffle.
+    /// </summary>
+    public sealed class GridManager : MonoBehaviour
     {
         private Block[,] m_Grid;
 
         #region Grid Actions Batching Struct & Variables
 
+        /// <summary>
+        /// Scope that batches grid mutations and triggers a refill at the end of the outer scope.
+        /// </summary>
         public readonly struct GridRefillResolutionScope : IDisposable
         {
             private readonly GridManager gridManager;
@@ -43,7 +50,7 @@ namespace Grid
             }
         }
 
-        public GridRefillResolutionScope ResolutionBatch => new GridRefillResolutionScope(this);
+        public GridRefillResolutionScope ResolutionBatch => new(this);
 
         private int m_BatchDepth = 0;
         private readonly HashSet<Vector2Int> m_EmptiedCells = new();
@@ -54,13 +61,15 @@ namespace Grid
 
         private static readonly MatchBlockClickStrategy s_MatchClick = new();
         // private static readonly PowerUpBlockClickStrategy s_PowerClick = new();
-        // private static readonly ObstacleBlockClickStrategy s_ObstacleClick = new();
+        private static readonly ObstacleBlockClickStrategy s_ObstacleClick = new();
 
         #endregion
 
         private bool m_IsResetting;
 
         [Inject] private LevelRules m_ActiveRules;
+
+        #region Unity Functions
 
         private void OnEnable()
         {
@@ -71,6 +80,10 @@ namespace Grid
         {
             UnsubscribeEvents();
         }
+
+        #endregion
+
+        #region Event Handlers
 
         private void SubscribeEvents()
         {
@@ -105,9 +118,7 @@ namespace Grid
             GEM.Unsubscribe<BlockEvent>(HandleBlockPopped, channel: (int)BlockEventType.BlockPopped);
             GEM.Unsubscribe<BlockEvent>(HandleBlockClicked, channel: (int)BlockEventType.BlockClicked);
         }
-
-        #region Event Handlers
-
+        
         private void HandleInitGrid(LevelEvent evt)
         {
             InitGrid(evt.GridSize, evt.LevelData);
@@ -178,9 +189,26 @@ namespace Grid
             var result = GetSameType(evt.MatchGroupId);
             evt.Blocks = result;
         }
+        
+        private void OnBlockClicked(Block block)
+        {
+            IBlockClickStrategy strategy = block switch
+            {
+                MatchBlock => s_MatchClick,
+                // PowerUpBlock => s_PowerClick,
+                ObstacleBlock => s_ObstacleClick,
+                _ => throw new NotSupportedException(
+                    $"Block type {block.GetType().Name} is not supported for clicking.")
+            };
+
+            StartCoroutine(strategy.ResolveClick(this, block));
+        }
 
         #endregion
 
+        #region Grid Init/Reset
+        
+        /// <summary>Creates the grid and spawns all blocks from level spawn data.</summary>
         public void InitGrid(Vector2Int gridSize, List<BlockSpawnData> spawnDataList)
         {
             m_Grid = new Block[gridSize.x, gridSize.y];
@@ -196,6 +224,9 @@ namespace Grid
             AnalyzeGrid(true);
         }
 
+        /// <summary>
+        /// Pops everything (without refill/adjacency damage), clears batch state, and leaves an empty grid.
+        /// </summary>
         public void ResetGrid()
         {
             if (m_Grid == null) return;
@@ -223,21 +254,11 @@ namespace Grid
             m_BatchDepth = 0;
             m_IsResetting = false;
         }
+        
+        #endregion
 
-        private void OnBlockClicked(Block block)
-        {
-            IBlockClickStrategy strategy = block switch
-            {
-                MatchBlock => s_MatchClick,
-                // PowerUpBlock => s_PowerClick,
-                // ObstacleBlock => s_ObstacleClick,
-                _ => throw new NotSupportedException(
-                    $"Block type {block.GetType().Name} is not supported for clicking.")
-            };
-
-            StartCoroutine(strategy.ResolveClick(this, block));
-        }
-
+        #region Grid Manipulation
+        
         private void SetGridPosition(Vector2Int gridPosition, Block block)
         {
             if (gridPosition.x < 0 || gridPosition.x >= m_Grid.GetLength(0) ||
@@ -259,7 +280,7 @@ namespace Grid
 
         private void AddBlock(Block block, Vector2Int gridPosition)
         {
-            Debug.Log("Adding block of type " + block.GetType().Name + " at position " + gridPosition + ".");
+            ZzzLog.Log("Adding block of type " + block.GetType().Name + " at position " + gridPosition + ".");
 
             if (gridPosition.x < 0 || gridPosition.x >= m_Grid.GetLength(0) ||
                 gridPosition.y < 0 || gridPosition.y >= m_Grid.GetLength(1))
@@ -273,7 +294,7 @@ namespace Grid
 
         private void RemoveBlock(Vector2Int gridPosition)
         {
-            Debug.Log("Removing block " + " at position " + gridPosition + ".");
+            ZzzLog.Log("Removing block " + " at position " + gridPosition + ".");
 
             if (gridPosition.x < 0 || gridPosition.x >= m_Grid.GetLength(0) ||
                 gridPosition.y < 0 || gridPosition.y >= m_Grid.GetLength(1))
@@ -288,6 +309,10 @@ namespace Grid
 
             BlockFactory.ReleaseBlock(block);
         }
+        
+        #endregion
+
+        #region Grid Queries
 
         private List<Block> GetAxis(GridAxis axis, Vector2Int gridPosition)
         {
@@ -407,44 +432,7 @@ namespace Grid
 
             return strategy.FindConnectedMatches(startBlock, m_Grid);
         }
-
-        /*
-        public PowerUpBlock SpawnPowerUp(in PowerUpPlan powerUpPlan)
-        {
-            if (powerUpPlan.PowerUpToCreate == PowerUpToCreate.None)
-            {
-                return null;
-            }
-
-            var data = new BlockSpawnData() { Category = BlockCategory.PowerUp, GridPosition = powerUpPlan.GridPos };
-
-            Block spawnedBlock = null;
-            switch (powerUpPlan.PowerUpToCreate)
-            {
-                case PowerUpToCreate.Rocket:
-                    data.PowerUpType = PowerUpType.Rocket;
-                    spawnedBlock = BlockFactory.CreateRocket(data, powerUpPlan.Orientation);
-                    break;
-                case PowerUpToCreate.Bomb:
-                    data.PowerUpType = PowerUpType.Bomb;
-                    spawnedBlock = BlockFactory.CreateBomb(data);
-                    break;
-                case PowerUpToCreate.DiscoBall:
-                    data.PowerUpType = PowerUpType.DiscoBall;
-                    spawnedBlock = BlockFactory.CreateDiscoBall(data, powerUpPlan.TargetType);
-                    break;
-            }
-
-            if (spawnedBlock == null)
-            {
-                Debug.LogError("Failed to spawn PowerUpBlock at position " + powerUpPlan.GridPos);
-                return null;
-            }
-
-            return (PowerUpBlock)spawnedBlock;
-        }
-*/
-
+        
         private void DamageAdjacentObstacles(Vector2Int gridPosition)
         {
             var adjacentBlocks = GetAdjacent4x4(gridPosition);
@@ -456,7 +444,7 @@ namespace Grid
                     continue;
                 }
 
-                Debug.Log("Adjacent Block at position " + adjacentBlocks[i].GridPosition);
+                ZzzLog.Log("Adjacent Block at position " + adjacentBlocks[i].GridPosition);
 
                 if (adjacentBlocks[i] is not ObstacleBlock obstacle)
                 {
@@ -469,6 +457,8 @@ namespace Grid
             ListPool<Block>.Release(adjacentBlocks);
         }
 
+        #endregion
+        
         #region Grid Actions Resolution
 
         private void BeginResolution()
@@ -502,7 +492,7 @@ namespace Grid
             {
                 refillEvt.SendGlobal((int)GridEventType.TriggerRefill);
             }
-
+            
             AnalyzeGrid(true);
         }
 
@@ -531,29 +521,32 @@ namespace Grid
 
                 var postResult = GridAnalyzer.Run(m_Grid, dirty, m_ActiveRules, false);
                 
-                for (var i = 0; i < postResult.TierUpdates.Count; i++)
+                for (var i = 0; i < postResult.Appearances.Count; i++)
                 {
-                    var tu = postResult.TierUpdates[i];
-                    tu.Block.SetTier(tu.NewTier);
+                    var u = postResult.Appearances[i];
+                    var p = u.GridPos;
+                    var b = m_Grid[p.x, p.y] as MatchBlock;
+                    if (b == null)
+                    {
+                        continue;
+                    }                    
+                    b.SetTier((IconTier)u.SlotIndex);          
                 }
                 
                 return;
             }
             
-            for (var i = 0; i < result.TierUpdates.Count; i++)
+            for (var i = 0; i < result.Appearances.Count; i++)
             {
-                var tu = result.TierUpdates[i];
-                tu.Block.SetTier(tu.NewTier);
+                var u = result.Appearances[i];
+                var p = u.GridPos;
+                var b = m_Grid[p.x, p.y] as MatchBlock;
+                if (b == null)
+                {
+                    continue;
+                }                    
+                b.SetTier((IconTier)u.SlotIndex);          
             }
-        }
-
-        private Func<Block[,], IReadOnlyList<Vector2Int>, IReadOnlyDictionary<int, int>,
-            List<ShufflePlanner.ShuffleAssignment>> m_PlanShuffle;
-
-        private void TryShuffleIfDeadlocked(IReadOnlyList<Vector2Int> matchableCells,
-            IReadOnlyDictionary<int, int> groupCounts)
-        {
-            m_PlanShuffle?.Invoke(m_Grid, matchableCells, groupCounts);
         }
 
         #endregion

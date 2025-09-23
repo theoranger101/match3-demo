@@ -45,11 +45,11 @@ namespace Utilities.Events
             return true;
         }
         
-        public static void Subscribe<T>(EventListener<T> listener, object context = null, int channel = DefaultChannel) 
+        public static void Subscribe<T>(EventListener<T> listener, object context = null, int channel = DefaultChannel, Priority priority = Priority.Normal) 
             where T : Event, new()
         {
             TryGetEventListenerCollection(context, channel, out var listeners);
-            listeners.AddListener(listener);
+            listeners.AddListener(listener, priority);
         }
 
         public static void Unsubscribe<T>(EventListener<T> listener, object context = null, int channel = DefaultChannel) where T : Event
@@ -61,6 +61,9 @@ namespace Utilities.Events
             
             listeners.RemoveListener(listener);
         }
+        
+        public static void Unsubscribe<T>(EventListener<T> handler, int channel)
+            where T : Event, new() => Unsubscribe(handler, null, channel);
         
         public static T SendEvent<T>(T evt, object context = null, int channel = DefaultChannel) 
             where T : Event, new()

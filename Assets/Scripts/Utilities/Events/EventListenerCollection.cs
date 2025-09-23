@@ -6,28 +6,28 @@ namespace Utilities.Events
 {
     public class EventListenerCollection
     {
-        private Dictionary<Type, List<object>> events;
+        private Dictionary<Type, PriorityList<object>> events;
         
         public EventListenerCollection()
         {
-            events = new Dictionary<Type, List<object>>();
+            events = new Dictionary<Type, PriorityList<object>>();
         }
 
-        public List<object> GetListenersForType(Type type)
+        public PriorityList<object> GetListenersForType(Type type)
         {
             events.TryGetValue(type, out var list);
             return list;
         }
         
-        public void AddListener<T>(EventListener<T> listener) where T : Event
+        public void AddListener<T>(EventListener<T> listener, Priority priority = Priority.Normal) where T : Event
         {
              var eventType = typeof(T);
             if (!events.TryGetValue(eventType, out var list))
             {
-                list = new List<object>();
+                list = new PriorityList<object>();
                 events[eventType] = list;
             }
-            list.Add(listener);
+            list.Add(listener, (int)priority);
         }
         
         public void RemoveListener<T>(EventListener<T> listener) where T : Event

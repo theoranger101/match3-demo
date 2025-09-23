@@ -3,8 +3,12 @@ using UnityEngine;
 
 namespace Blocks.Data
 {
+    /// <summary>
+    /// Central library for block appearance. Resolves a sprite from the block instance
+    /// and a logical slot index, delegating to the appropriate <see cref="SkinTable"/>.
+    /// </summary>
     [CreateAssetMenu(fileName = "SkinLibrary", menuName = "Blocks/Skin Library")]
-    public class SkinLibrary : ScriptableObject
+    public sealed class SkinLibrary : ScriptableObject
     {
         public SkinTable MatchSkins;
         public SkinTable ObstacleSkins;
@@ -17,9 +21,9 @@ namespace Blocks.Data
                 case BlockCategory.Match:
                     return MatchSkins == null ? null : MatchSkins.GetSkin(((MatchBlock)block).MatchGroupId, slotIndex);
                 case BlockCategory.Obstacle:
-                    return ObstacleSkins == null ? null : ObstacleSkins.GetSkin(((ObstacleBlock)block).GetTypeId(), slotIndex);
+                    return ObstacleSkins == null ? null : ObstacleSkins.GetSkinById(((ObstacleBlock)block).GetTypeId(), slotIndex);
                 case BlockCategory.PowerUp:
-                    return PowerupSkins == null ? null : PowerupSkins.GetSkin(((PowerUpBlock)block).GetTypeId(), slotIndex);
+                    return PowerupSkins == null ? null : PowerupSkins.GetSkinById(((PowerUpBlock)block).GetTypeId(), slotIndex);
                 default:
                     return null;
             }

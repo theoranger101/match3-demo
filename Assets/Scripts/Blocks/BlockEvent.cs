@@ -3,13 +3,11 @@ using Utilities.Events;
 
 namespace Blocks
 {
-    public enum BlockEventType{
+    public enum BlockEventType {
         BlockCreated = 0,
         BlockClicked = 1,
         BlockPopped = 2,
-        BlockGroupUpdated = 3,
-        BlockTierUpdated = 4,
-        BlockAppearanceUpdated = 5,
+        BlockAppearanceUpdated = 3,
     }
     
     public class BlockEvent : Event<BlockEvent>
@@ -49,6 +47,7 @@ namespace Blocks
 
             Block = null;
             BlockView = null;
+            Index = -1;
         }
     }
 }

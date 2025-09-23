@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   SkinId: 1
   Slots:
+  - {fileID: 21300000, guid: ca6f7935f3cd0410594997ccebff85b5, type: 3}
   - {fileID: 21300000, guid: a00f589719d894badb2122a200e8d7ab, type: 3}
   - {fileID: 21300000, guid: af15d684948124af89d1e2333ac75b00, type: 3}
   - {fileID: 21300000, guid: b3dc1651e3af248768c8193dcef6f504, type: 3}
-  - {fileID: 21300000, guid: ca6f7935f3cd0410594997ccebff85b5, type: 3}

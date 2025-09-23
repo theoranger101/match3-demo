@@ -96,6 +96,6 @@ MonoBehaviour:
     ObstacleType: 0
   Seed: 1234
   RemapColorsOnRetry: 1
-  LevelRules: {fileID: 11400000, guid: 5566e576c03a0432da4646fe5d862b1a, type: 2}
-  GameTheme: {fileID: 11400000, guid: 8e955253ab4c742edb326d8a5b2716a3, type: 2}
+  LevelRules: {fileID: 11400000, guid: d2991908cd8a54f349c9d49d751d0404, type: 2}
+  SkinLibrary: {fileID: 11400000, guid: 2f4729a57c8424906bcb2fdbaf56d32b, type: 2}
   MoveCount: 10

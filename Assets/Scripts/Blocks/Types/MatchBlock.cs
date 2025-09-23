@@ -1,8 +1,22 @@
 using System;
-using UnityEngine;
+using Utilities;
 
 namespace Blocks.Types
 {
+    /// <summary>
+    /// Visual slot “tier” for a block’s icon set. Interpreted by the UI layer (SkinLibrary).
+    /// </summary>
+    public enum IconTier : byte
+    {
+        Default = 0,
+        A = 1,
+        B = 2,
+        C = 3,
+    }
+    
+    /// <summary>
+    /// Standard matchable block (group based). Falls with gravity and can be popped.
+    /// </summary>
     public class MatchBlock : Block
     {
         public int MatchGroupId;
@@ -19,7 +33,7 @@ namespace Blocks.Types
 
         public override void Pop()
         {
-            Debug.Log($"Popped MatchBlock: {MatchGroupId} at position {GridPosition}.");
+            ZzzLog.Log($"Popped MatchBlock: {MatchGroupId} at position {GridPosition}.");
 
             base.Pop();
         }

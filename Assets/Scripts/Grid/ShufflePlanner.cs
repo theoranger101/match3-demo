@@ -7,6 +7,10 @@ using Random = System.Random;
 
 namespace Grid
 {
+    /// <summary>
+    /// Plans a pair-first shuffle for a deadlocked board.
+    /// Produces assignments mapping grid positions to new match-group ids.
+    /// </summary>
     public static class ShufflePlanner
     {
         public readonly struct ShuffleAssignment
@@ -38,18 +42,12 @@ namespace Grid
             var neighbors = ListPool<Vector2Int>.Get();
             var pairs = ListPool<(Vector2Int A, Vector2Int B)>.Get();
 
-            var pooledCounts = false;
-            Dictionary<int, int> counts;
-
+            var counts = DictionaryPool<int,int>.Get();
+            counts.Clear();
             if (groupCounts != null)
             {
-                counts = (Dictionary<int, int>)groupCounts;
-            }
-            else
-            {
-                counts = DictionaryPool<int, int>.Get();
-                counts.Clear();
-                pooledCounts = true;
+                foreach (var kv in groupCounts)
+                    counts[kv.Key] = kv.Value;
             }
 
             if (matchableCells != null)
@@ -91,25 +89,6 @@ namespace Grid
                         
                         var id = mb.MatchGroupId;
                         counts[id] = counts.TryGetValue(id, out var count) ? count + 1 : 1;
-                    }
-                }
-            }
-
-            if (groupCounts == null || matchableCells == null)
-            {
-                for (var x = 0; x < w; x++)
-                {
-                    for (var y = 0; y < h; y++)
-                    {
-                        if (grid[x, y] is not MatchBlock mb)
-                        {
-                            continue;
-                        }
-
-                        cells.Add(new Vector2Int(x, y));
-
-                        var groupId = mb.MatchGroupId;
-                        counts[groupId] = counts.TryGetValue(groupId, out var count) ? count + 1 : 1;
                     }
                 }
             }
@@ -255,6 +234,8 @@ namespace Grid
             return assignments;
         }
 
+        #region Helpers
+
         private static void EnsureStampSize(int w, int h)
         {
             if (s_UsedStamp == null || s_UsedStamp.GetLength(0) != w || s_UsedStamp.GetLength(1) != h)
@@ -274,12 +255,7 @@ namespace Grid
                 (list[i], list[j]) = (list[j], list[i]);
             }
         }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="items"></param>
-        /// <returns></returns>
+        
         private static IEnumerable<int> RoundRobin(List<(int group, int need)> items)
         {
             var queue = QueuePool<(int group, int need)>.Get(items);
@@ -318,5 +294,7 @@ namespace Grid
             foreach (var kv in counts) return kv.Key;
             return 0;
         }
+
+        #endregion
     }
 }

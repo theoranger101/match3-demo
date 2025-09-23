@@ -1,38 +1,48 @@
 using System.Collections.Generic;
 using Blocks;
-using Blocks.Data;
 using Blocks.Types;
-using LevelManagement;
+using Levels;
 using UnityEngine;
 using Utilities.Pooling;
 
 namespace Grid
 {
-    public readonly struct TierUpdate
+    /// <summary>
+    /// Skin appearance assignment for a specific grid cell (slot index is resolved by the UI layer).
+    /// </summary>
+    public readonly struct AppearanceAt
     {
-        public readonly MatchBlock Block;
-        public readonly IconTier NewTier;
+        public readonly Vector2Int GridPos;
+        public readonly int SlotIndex;
 
-        public TierUpdate(MatchBlock block, IconTier newTier)
+        public AppearanceAt(Vector2Int gridPos, int slotIndex)
         {
-            Block = block;
-            NewTier = newTier;
+            GridPos = gridPos;
+            SlotIndex = slotIndex;
         }
     }
 
     public sealed class GridAnalysisResult
     {
         public bool HasAnyPair;
-        public readonly List<TierUpdate> TierUpdates = new();
+        public readonly List<AppearanceAt> Appearances = new();
         public readonly Dictionary<int, int> MatchGroupCounts = new();
         public readonly List<Vector2Int> MatchableCells = new();
     }
     
+    /// <summary>
+    /// Flood-fill analysis over the grid. Computes connected components of match blocks,
+    /// updates tier-based appearance slots, and reports deadlocks & counts.
+    /// </summary>
     public static class GridAnalyzer
     {
         private static int s_VisitStamp;
         private static int[,] s_Visited;
 
+        /// <summary>
+        /// Runs the analysis. If <paramref name="fullScan"/> is false, uses <paramref name="dirtyCells"/> and
+        /// their neighbours as the frontier. Returns pooled collections inside <see cref="GridAnalysisResult"/>.
+        /// </summary>
         public static GridAnalysisResult Run(Block[,] grid, IEnumerable<Vector2Int> dirtyCells, LevelRules rules, bool fullScan = false)
         {
             var w = grid.GetLength(0);
@@ -70,17 +80,26 @@ namespace Grid
             for (var i = 0; i < frontier.Count; i++)
             {
                 var pos = frontier[i];
+                
                 if (s_Visited[pos.x, pos.y] == s_VisitStamp)
                 {
                     continue;
                 }
 
-                if (grid[pos.x, pos.y] is not MatchBlock start)
+                var b = grid[pos.x, pos.y];
+
+                if (b == null)
+                {
+                    s_Visited[pos.x, pos.y] = s_VisitStamp;
+                    continue;  
+                }
+                
+                if (b is not MatchBlock start)
                 {
                     s_Visited[pos.x, pos.y] = s_VisitStamp;
                     continue;
                 }
-                
+
                 res.MatchableCells.Add(pos);
                 
                 stack.Clear();
@@ -96,6 +115,11 @@ namespace Grid
                     var queued = stack[^1];
                     stack.RemoveAt(stack.Count - 1);
 
+                    if (grid[queued.x, queued.y] == null)
+                    {
+                        continue;
+                    }
+                    
                     if (grid[queued.x, queued.y] is not MatchBlock mb)
                     {
                         continue;
@@ -149,7 +173,7 @@ namespace Grid
 
                 for (var j = 0; j < size; j++)
                 {
-                    res.TierUpdates.Add(new TierUpdate(members[j], tier));
+                    res.Appearances.Add(new AppearanceAt(members[j].GridPosition, (int)tier));
                 }
             }
 
@@ -159,6 +183,8 @@ namespace Grid
             
             return res;
         }
+
+        #region Helpers
 
         private static void EnsureStampArray(int w, int h)
         {
@@ -175,5 +201,9 @@ namespace Grid
                 list.Add(p);
             }
         }
+
+        #endregion
+        
+
     }
 }

@@ -2,8 +2,10 @@ using System.Collections.Generic;
 using Blocks;
 using Blocks.UI;
 using DG.Tweening;
-using LevelManagement.Data;
+using Levels;
+using Levels.Data;
 using UnityEngine;
+using Utilities;
 using Utilities.DI;
 using Utilities.Events;
 
@@ -36,6 +38,8 @@ namespace Grid.UI
 
             GEM.Subscribe<BlockEvent>(HandleBlockAdded, channel: (int)BlockEventType.BlockCreated);
             GEM.Subscribe<BlockEvent>(HandleBlockRemoved, channel: (int)BlockEventType.BlockPopped);
+            
+            GEM.Subscribe<LevelEvent>(HandleLevelFinished, channel:(int)LevelEventType.LevelFinished);
 
             //  GEM.Subscribe<PowerUpEvent>(OnPowerUpCreated, channel: (int)PowerUpEventType.PowerUpCreated);
         }
@@ -47,7 +51,17 @@ namespace Grid.UI
             GEM.Unsubscribe<BlockEvent>(HandleBlockAdded, channel: (int)BlockEventType.BlockCreated);
             GEM.Unsubscribe<BlockEvent>(HandleBlockRemoved, channel: (int)BlockEventType.BlockPopped);
 
+            GEM.Unsubscribe<LevelEvent>(HandleLevelFinished, channel:(int)LevelEventType.LevelFinished);
+            
             //  GEM.Unsubscribe<PowerUpEvent>(OnPowerUpCreated, channel: (int)PowerUpEventType.PowerUpCreated);
+        }
+
+        private void HandleLevelFinished(LevelEvent evt)
+        {
+            foreach (var blockViewPair in m_ActiveBlockViews)
+            {
+                blockViewPair.Value.ToggleInput(false);
+            }
         }
         
         private void HandleBlockMoved(GridEvent evt)
@@ -57,7 +71,7 @@ namespace Grid.UI
 
         private void HandleBlockAdded(BlockEvent evt)
         {
-            Debug.Log("Creating view for new block " + evt.Block.GetType() + " at position " + evt.Block.GridPosition);
+            ZzzLog.Log("Creating view for new block " + evt.Block.GetType() + " at position " + evt.Block.GridPosition);
 
             AddBlockView(evt.Block);
         }
@@ -66,7 +80,7 @@ namespace Grid.UI
         {
             if (!m_ActiveBlockViews.TryGetValue(evt.Block, out var view))
             {
-                Debug.LogError(
+                ZzzLog.LogError(
                     $"Block {evt.Block.GetType()} was not found in view list, at position {evt.Block.GridPosition}");
                 return;
             }
@@ -85,7 +99,7 @@ namespace Grid.UI
         {
             if (m_ActiveBlockViews.ContainsKey(block))
             {
-                Debug.LogWarning($"View already exists for block {block}. Ignoring duplicate AddBlock.");
+                ZzzLog.LogWarning($"View already exists for block {block}. Ignoring duplicate AddBlock.");
                 return;
             }
 
@@ -108,17 +122,17 @@ namespace Grid.UI
 
         private void RemoveBlockView(BlockView view)
         {
-            Debug.Log("Removing block view for " + view.Block.GetType() + " at position " + view.Block.GridPosition);
+            ZzzLog.Log("Removing block view for " + view.Block.GetType() + " at position " + view.Block.GridPosition);
 
-            m_BlockViewFactory.ReleaseView(view);
             m_ActiveBlockViews.Remove(view.Block);
+            m_BlockViewFactory.ReleaseView(view);
         }
 
         private void OnBlockMoved(Block block)
         {
             if (!m_ActiveBlockViews.TryGetValue(block, out var blockView))
             {
-                Debug.LogWarning($"BlockView for block at {block.GridPosition} not found.");
+                ZzzLog.LogWarning($"BlockView for block at {block.GridPosition} not found.");
                 return;
             }
 
@@ -132,8 +146,9 @@ namespace Grid.UI
                 m_BlockMovementSequence = DOTween.Sequence();
             }
             
-            m_BlockMovementSequence.Join(view.transform.DOLocalMove(targetPos,
-                0.08f).SetEase(Ease.OutQuad).SetRecyclable());
+            m_BlockMovementSequence
+                .Join(view.transform.DOLocalMove(targetPos, 0.25f)
+                    .SetEase(Ease.OutBounce).SetRecyclable());
             view.UpdateSortingOrder();
         }
 
