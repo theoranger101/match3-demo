@@ -170,7 +170,7 @@ This batching model also makes it easier to add effects/animations later (e.g., 
   - **Validate** button checks duplicates & out-of-bounds.
   - `OnValidate` keeps `GridSize` in sync with `LevelRules` and warns on `ColorCount` vs available skins.
   - Find existing `LevelDefinition`s under `Assets/Data/Levels/LevelDefinitions/...`
-  - Add new `LevelDefinition` asset to `LevelManager` in `Main` scene to test in game. (improvement point!)
+  - Add new `LevelDefinition` asset to `LevelManager` in `Main` scene to test in game. 
 
 - **SkinSetBuilder** (`Tools/Skins/Create SkinSets from Folder...`)
   - Walks subfolders; for each folder with a **leading number** (e.g., `5_blue`) collects sprites in that folder.
