@@ -146,77 +146,14 @@ namespace Grid.UI
                 m_BlockMovementSequence = DOTween.Sequence();
             }
             
+            // TODO: magic numbers & selectable easings (TweenConfig)
             m_BlockMovementSequence
-                .Join(view.transform.DOLocalMove(targetPos, 0.25f)
+                .Join(view.transform.DOLocalMove(targetPos, 0.2f)
                     .SetEase(Ease.OutBounce).SetRecyclable());
             view.UpdateSortingOrder();
         }
 
         private Vector2 GridToWorld(Vector2Int gp) => m_GeometryConfig.GridToWorld(gp);
         private Vector2 GetSpawnPosition(Vector2Int gp) => m_GeometryConfig.GetSpawnStartAbove(gp);
-
-        /*
-        // TODO: magic numbersss
-        public Tween PlayPowerUpMerge(Block pivot, IReadOnlyList<Block> mergers, PowerUpToCreate type)
-        {
-            var seq = DOTween.Sequence().SetRecyclable();
-
-            if (!m_ActiveBlockViews.TryGetValue(pivot, out var pivotView))
-            {
-                Debug.LogWarning($"BlockView for pivot at {pivot} not found.");
-                return seq;
-            }
-
-            var pivotPos = pivotView.RectTransform.anchoredPosition;
-            var pivotAnimator = pivotView.GetComponent<BlockViewAnimator>(); // TODO: getcomponent at runtime!
-
-            if (pivotAnimator == null)
-            {
-                Debug.LogWarning($"Animator for pivot at {pivot.GridPosition} not found.");
-            }
-            else
-            {
-                seq.Join(pivotAnimator.Bump(12f, 0.08f));
-            }
-
-            var duration = 0.08f;
-
-            for (var i = 0; i < mergers.Count; i++)
-            {
-                var block = mergers[i];
-
-                if (ReferenceEquals(block, pivot))
-                {
-                    continue;
-                }
-
-                if (!m_ActiveBlockViews.TryGetValue(block, out var blockView))
-                {
-                    Debug.LogWarning($"BlockView for block at {block.GridPosition} not found.");
-                    continue;
-                }
-
-                var rt = blockView.RectTransform;
-                var startPos = rt.anchoredPosition;
-                var midPos = Vector2.Lerp(startPos, pivotPos, 0.5f);
-
-                var flySeq = DOTween.Sequence().SetRecyclable()
-                    .Append(rt.DOAnchorPos(midPos, duration * 0.6f).SetEase(Ease.OutQuad))
-                    .Append(rt.DOAnchorPos(pivotPos, duration * 0.4f).SetEase(Ease.OutCubic));
-
-                var shrinkTween = rt.DOScale(0f, duration).SetEase(Ease.InQuad).SetRecyclable();
-                var fadeTween = blockView.Image.DOFade(0f, duration).SetRecyclable();
-
-                seq.Join(flySeq).Join(shrinkTween).Join(fadeTween);
-
-                seq.AppendCallback(() =>
-                {
-
-                });
-            }
-
-            return seq;
-        }
-        */
     }
 }
