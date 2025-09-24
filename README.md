@@ -6,12 +6,13 @@
 
 ## 🎥 Demo
 
-- **Video:** 
+- **Video:** https://youtube.com/shorts/sRDkVMcAk2g
 
 ---
 
 ## Table of Contents
 
+- [How to Run](#-how-to-run)
 - [Highlights](#-highlights)
 - [Gameplay Overview](#-gameplay-overview)
 - [Tech & Libraries](#-tech--libraries)
@@ -22,6 +23,14 @@
 - [Design Choices](#-design-choices)
 - [Editor Tooling](#-editor-tooling)
 - [Improvement Points](#-improvement-points)
+
+---
+
+## How to Run
+
+1. Open the project in **Unity 2022.3.62f**.
+2. Open the **`Main`** scene.
+3. Press **Play**.
 
 ---
 
