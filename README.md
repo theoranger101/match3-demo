@@ -1,4 +1,4 @@
-# 🧩 Match-3 Case Study 
+# Match-3 Case Study 
 
 > A systems-driven match-3 sample that showcases dependency injection, an event bus, additive scene flow, pooled objects, deterministic level data, and a deadlock-free shuffle.
 
@@ -37,7 +37,7 @@
 
 ---
 
-## 🎮 Gameplay Overview
+## Gameplay Overview
 
 - Tap **2+** adjacent (4-dir) **match blocks** to pop.
 - Gravity pulls blocks down; empty cells are **refilled**.
@@ -48,7 +48,7 @@
 
 ---
 
-## 🧱 Tech & Libraries
+## Tech & Libraries
 
 - **Engine:** Unity 2022.3.62f
 - **Language:** C#
@@ -64,7 +64,7 @@
 
 ---
 
-## 🧠 Architecture
+## Architecture
 
 ### Scene Flow
 - `LevelManager` orchestrates **Play → load Game additively** via `SceneTransitioner` → inject services → `LevelController.StartLevel()`.
@@ -84,7 +84,7 @@
 
 ---
 
-## 🧩 Design Choices
+## Design Choices
 
 - **Factories**  
   `BlockFactory` and `BlockViewFactory` centralize creation/release to enable pooling and reduce coupling.
@@ -95,7 +95,7 @@
 - **Event-based structure (GEM)**  
   Strongly-typed events let systems evolve independently. Input → Grid → UI flows without direct references.
 
-### 🔁 Shuffle Planner
+### Shuffle Planner
 
 `ShufflePlanner` **plans** color assignments instead of doing blind random shuffles. The goal is to **maximize new adjacent pairs** while respecting each color’s available **quota**, with an optional **pair cap** via `maxPairs`.
 
@@ -137,7 +137,7 @@
    - Emit **`ShuffleAssignment(GridPosition, MatchGroupId)`** for every assigned cell (pairs and singles).
    - Caller applies the plan, then runs **`GridAnalyzer`** once on the **dirty set** to update visuals/tiers.
   
-### 📦 Resolution batching (grid scope)
+### Resolution batching (grid scope)
 
 `using (grid.ResolutionBatch)` wraps a burst of actions (e.g., multiple pops from a single click). Inside the scope we:
 
@@ -146,7 +146,7 @@
 
 This batching model also makes it easier to add effects/animations later (e.g., wait for a pop animation, then do a single refill/analyze).
 
-### 🏷️ Stamp-based visitation 
+### Stamp-based visitation 
 
 `GridAnalyzer` avoids repeatedly scanning and clearing memory:
 
@@ -162,7 +162,7 @@ This batching model also makes it easier to add effects/animations later (e.g., 
 
 ---
 
-## 🎨 Editor Tooling
+## Editor Tooling
 
 - **LevelDefinitionEditor**
   - Paint **Match / Obstacle / PowerUp / Erase** on a visual grid.
@@ -181,7 +181,7 @@ This batching model also makes it easier to add effects/animations later (e.g., 
 
 ---
 
-## 🗓️ Improvement Points
+## Improvement Points
 
 - **Addressables** for skins/configs and level content  
 - **JSON** import/export pipeline for level data  
