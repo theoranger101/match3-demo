@@ -15,6 +15,7 @@ namespace Levels
     /// - selects which LevelDefinition to play
     /// (could've been better separation of concerns)
     /// </summary>
+    [DefaultExecutionOrder((int)ExecutionOrders.LevelManager)]
     public sealed class LevelManager : MonoBehaviour
     {
         public List<LevelDefinition> LevelDefinitions;

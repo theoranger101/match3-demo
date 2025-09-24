@@ -4,5 +4,6 @@ namespace Core
     {
         ContainerProvider = -101,
         Installer = -100,
+        LevelManager = -1,
     }
 }

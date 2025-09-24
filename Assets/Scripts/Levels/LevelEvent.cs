@@ -15,11 +15,12 @@ namespace Levels
         ResetGrid = 3,
         //
         ConsumeMove = 4,
+        UpdateMoveCount = 5,
         // 
-        LevelFinished = 5,
-        NextLevel = 6,
-        RetryLevel = 7,
-        ReturnToMenu = 8,
+        LevelFinished = 6,
+        NextLevel = 7,
+        RetryLevel = 8,
+        ReturnToMenu = 9,
     }
 
     public class LevelEvent : Event<LevelEvent>
@@ -28,6 +29,8 @@ namespace Levels
         public List<BlockSpawnData> LevelData;
 
         public LevelDefinition LevelDefinition;
+
+        public int MoveCount;
 
         public static LevelEvent Get()
         {
@@ -52,13 +55,14 @@ namespace Levels
 
             return evt;
         }
-
+        
         public override void Dispose()
         {
             base.Dispose();
             
             LevelData = null;
             LevelDefinition = null;
+            MoveCount = -1;
         }
     }
 }

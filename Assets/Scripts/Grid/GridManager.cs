@@ -462,7 +462,7 @@ namespace Grid
         
         #region Grid Actions Resolution
 
-        private WaitForSeconds m_WaitForSeconds = new(0.5f);
+        [Inject] private Func<WaitForSeconds> m_GetShuffleWaitForSeconds;
         
         private void BeginResolution()
         {
@@ -510,7 +510,7 @@ namespace Grid
             
             if (!result.HasAnyPair)
             {
-                yield return m_WaitForSeconds;
+                yield return m_GetShuffleWaitForSeconds?.Invoke();
                 
                 var plan = ShufflePlanner.PlanShuffle(m_Grid, result.MatchableCells, result.MatchGroupCounts, maxPairs: 1);
                 
@@ -532,14 +532,12 @@ namespace Grid
                 
                 for (var i = 0; i < postResult.Appearances.Count; i++)
                 {
-                    var u = postResult.Appearances[i];
-                    var p = u.GridPos;
-                    var b = m_Grid[p.x, p.y] as MatchBlock;
-                    if (b == null)
-                    {
-                        continue;
-                    }                    
-                    b.SetTier((IconTier)u.SlotIndex);          
+                    var appearance = postResult.Appearances[i];
+                    var pos = appearance.GridPos;
+                
+                    var b = m_Grid[pos.x, pos.y] as MatchBlock;
+                
+                    b?.SetTier((IconTier)appearance.SlotIndex);          
                 }
                 
                 HashSetPool<Vector2Int>.Release(dirty);
@@ -550,14 +548,12 @@ namespace Grid
             
             for (var i = 0; i < result.Appearances.Count; i++)
             {
-                var u = result.Appearances[i];
-                var p = u.GridPos;
-                var b = m_Grid[p.x, p.y] as MatchBlock;
-                if (b == null)
-                {
-                    continue;
-                }                    
-                b.SetTier((IconTier)u.SlotIndex);          
+                var appearance = result.Appearances[i];
+                var pos = appearance.GridPos;
+                
+                var b = m_Grid[pos.x, pos.y] as MatchBlock;
+                
+                b?.SetTier((IconTier)appearance.SlotIndex);          
             }
         }
 

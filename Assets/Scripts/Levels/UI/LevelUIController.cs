@@ -1,3 +1,4 @@
+using System;
 using Core;
 using UnityEngine;
 using Utilities;
@@ -10,7 +11,7 @@ namespace Levels.UI
     /// High-level UI state controller for Start / Finish / Loading overlays.
     /// Reacts to scene + level events and toggles CanvasGroups accordingly.
     /// </summary>
-    public class LevelUIController : MonoBehaviour
+    public sealed class LevelUIController : MonoBehaviour
     {
         public CanvasGroup StartUI;
         public CanvasGroup FinishUI;
@@ -18,8 +19,7 @@ namespace Levels.UI
 
         private CanvasGroup[] m_Groups;
 
-        [Inject] private LevelManager m_LevelManager;
-        [Inject] private LevelController m_LevelController;
+        [Inject] private Func<float> m_GetTransitionDuration;
 
         private enum UIScreen
         {
@@ -153,7 +153,7 @@ namespace Levels.UI
             {
                 var cg = m_Groups[i];
                 if (!cg) continue;
-                cg.Toggle(cg == cgToShow);
+                cg.Toggle(cg == cgToShow, m_GetTransitionDuration?.Invoke());
             }
         }
 
@@ -168,7 +168,7 @@ namespace Levels.UI
             {
                 var cg = m_Groups[i];
                 if (!cg) continue;
-                cg.Toggle(false);
+                cg.Toggle(false, m_GetTransitionDuration?.Invoke());
             }
         }
         

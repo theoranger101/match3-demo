@@ -1,9 +1,10 @@
 using System.Collections.Generic;
 using Blocks;
 using Blocks.UI;
+using Core.Data;
 using DG.Tweening;
+using Grid.Data;
 using Levels;
-using Levels.Data;
 using UnityEngine;
 using Utilities;
 using Utilities.DI;
@@ -19,6 +20,7 @@ namespace Grid.UI
 
         [Inject] private BlockViewFactory m_BlockViewFactory;
         [Inject] private GridGeometryConfig m_GeometryConfig;
+        [Inject] private TweenConfig m_TweenConfig;
 
         private Sequence m_BlockMovementSequence;
         
@@ -40,8 +42,6 @@ namespace Grid.UI
             GEM.Subscribe<BlockEvent>(HandleBlockRemoved, channel: (int)BlockEventType.BlockPopped);
             
             GEM.Subscribe<LevelEvent>(HandleLevelFinished, channel:(int)LevelEventType.LevelFinished);
-
-            //  GEM.Subscribe<PowerUpEvent>(OnPowerUpCreated, channel: (int)PowerUpEventType.PowerUpCreated);
         }
 
         private void UnsubscribeEvents()
@@ -52,8 +52,6 @@ namespace Grid.UI
             GEM.Unsubscribe<BlockEvent>(HandleBlockRemoved, channel: (int)BlockEventType.BlockPopped);
 
             GEM.Unsubscribe<LevelEvent>(HandleLevelFinished, channel:(int)LevelEventType.LevelFinished);
-            
-            //  GEM.Unsubscribe<PowerUpEvent>(OnPowerUpCreated, channel: (int)PowerUpEventType.PowerUpCreated);
         }
 
         private void HandleLevelFinished(LevelEvent evt)
@@ -62,6 +60,8 @@ namespace Grid.UI
             {
                 blockViewPair.Value.ToggleInput(false);
             }
+            
+            m_BlockMovementSequence.Kill();
         }
         
         private void HandleBlockMoved(GridEvent evt)
@@ -87,13 +87,6 @@ namespace Grid.UI
 
             RemoveBlockView(view);
         }
-
-        /*
-        private void OnPowerUpCreated(PowerUpEvent evt)
-        {
-            evt.Tween = PlayPowerUpMerge(evt.Block, evt.BlockList, evt.PowerUpToCreate);
-        }
-        */
 
         private void AddBlockView(Block block)
         {
@@ -146,10 +139,10 @@ namespace Grid.UI
                 m_BlockMovementSequence = DOTween.Sequence();
             }
             
-            // TODO: magic numbers & selectable easings (TweenConfig)
             m_BlockMovementSequence
-                .Join(view.transform.DOLocalMove(targetPos, 0.2f)
-                    .SetEase(Ease.OutBounce).SetRecyclable());
+                .Join(view.transform.DOLocalMove(targetPos, m_TweenConfig.BlockFallDuration)
+                    .SetEase(m_TweenConfig.BlockMoveEase)
+                    .SetRecyclable());
             view.UpdateSortingOrder();
         }
 

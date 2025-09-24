@@ -15,6 +15,20 @@ namespace Levels
         private int m_AttemptIndex = 0;
 
         [SerializeField] private int m_MovesLeft;
+
+        private int MoveCount
+        {
+            get => m_MovesLeft;
+            set
+            {
+                m_MovesLeft = value;
+                using (var evt = LevelEvent.Get())
+                {
+                    evt.MoveCount = value;
+                    evt.SendGlobal((int)LevelEventType.UpdateMoveCount);
+                }
+            }
+        }
         
         public LevelDefinition ActiveLevel => m_ActiveLevel;
         public SkinLibrary ActiveTheme => m_ActiveLevel.SkinLibrary;
@@ -29,7 +43,7 @@ namespace Levels
         
         public void StartLevel()
         {
-            m_MovesLeft = m_ActiveLevel.MoveCount;
+            MoveCount = m_ActiveLevel.MoveCount;
             
             var data = LevelLoader.BuildSpawnData(m_ActiveLevel,
                 runSeed: m_ActiveLevel.RemapColorsOnRetry ? m_ActiveLevel.Seed + m_AttemptIndex : m_ActiveLevel.Seed);
@@ -63,9 +77,9 @@ namespace Levels
         
         private void HandleConsumeMove(LevelEvent evt)
         {
-            m_MovesLeft--;
+            MoveCount--;
 
-            if (m_MovesLeft <= 0)
+            if (MoveCount <= 0)
             {
                 FinishLevel(false);
             }

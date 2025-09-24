@@ -1,5 +1,7 @@
+using System;
 using Blocks.UI;
 using Grid;
+using Grid.Data;
 using Grid.UI;
 using Levels;
 using Levels.Data;
@@ -61,7 +63,7 @@ namespace Core.Services
             container.InjectInto(m_GridManager);
             container.InjectInto(m_GridView);
             container.InjectInto(m_GridRefillController);
-
+            
             var cameraController = container.Get<CameraController>();
             container.InjectInto(cameraController);
         }

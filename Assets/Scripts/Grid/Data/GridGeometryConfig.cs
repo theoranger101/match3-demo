@@ -1,11 +1,11 @@
 using UnityEngine;
 
-namespace Levels.Data
+namespace Grid.Data
 {
     /// <summary>
     /// Grid/world geometry configuration used by UI & gameplay for consistent positioning.
     /// </summary>
-    [CreateAssetMenu(fileName = "GridGeometryConfig", menuName = "Levels/GridGeometryConfig")]
+    [CreateAssetMenu(fileName = "GridGeometryConfig", menuName = "Grid Data/Grid Geometry Config")]
     public sealed class GridGeometryConfig : ScriptableObject
     {
         [Header("Layout")] 

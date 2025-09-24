@@ -7,7 +7,7 @@ using Utilities.Events;
 
 namespace Levels.UI
 {
-    public class MainLevelView : MonoBehaviour
+    public sealed class MainLevelView : MonoBehaviour
     {
         public TextMeshProUGUI LevelText;
         public Button PlayButton;
