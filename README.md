@@ -64,7 +64,7 @@
 
 **Third-party:**
 - **UniTask** — async/await for Unity: <https://github.com/Cysharp/UniTask>  
-- **DOTween** — tweening engine (optional/guarded): <https://dotween.demigiant.com/>
+- **DOTween** — tweening engine: <https://dotween.demigiant.com/>
 
 **Custom utilities:**
 - `Utilities.DI` (tiny DI)
